@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { ref, computed } from "vue";
+import { toPng } from 'html-to-image';
 import {
   Card,
   CardContent,
@@ -24,9 +25,9 @@ const screenshotUrl = ref<string>("");
 
 const models = [
   { value: "xiaomi-band-10", label: "小米手环10" },
-  { value: "xiaomi-band-9", label: "小米手环9" },
-  { value: "xiaomi-watch-s4", label: "Xiaomi Watch S4" },
-  { value: "redmi-watch-5", label: "红米手表5" },
+  // { value: "xiaomi-band-9", label: "小米手环9" },
+  // { value: "xiaomi-watch-s4", label: "Xiaomi Watch S4" },
+  // { value: "redmi-watch-5", label: "红米手表5" },
 ];
 
 interface ModelInfo {
@@ -44,8 +45,8 @@ const modelDimensions: Record<string, ModelInfo> = {
     height: 520,
     deviceName: "小米手环10",
     watchFaceType: "跑道形",
-    top: "-79.4px",
-    left: "-8.8px",
+    top: "-79.678px",
+    left: "-8.95px",
   },
   "xiaomi-band-9": {
     width: 192,
@@ -81,7 +82,7 @@ interface RotationConfig {
 }
 
 const defaultRotationConfigs: Record<string, RotationConfig> = {
-  "xiaomi-band-10": { rotateX: 342, rotateY: 37, rotateZ: 28, scale: 0.51 },
+  "xiaomi-band-10": { rotateX: 342, rotateY: 37, rotateZ: 27.8, scale: 0.515 },
   "xiaomi-band-9": { rotateX: 10, rotateY: -30, rotateZ: 8, scale: 0.78 },
   "xiaomi-watch-s4": { rotateX: 20, rotateY: -15, rotateZ: 0, scale: 0.85 },
   "redmi-watch-5": { rotateX: 8, rotateY: -28, rotateZ: 6, scale: 0.79 },
@@ -128,6 +129,27 @@ const resetScreenshot = () => {
     "screenshot-upload"
   ) as HTMLInputElement;
   if (fileInput) fileInput.value = "";
+};
+
+const previewRef = ref<HTMLDivElement | null>(null);
+
+const exportImage = async () => {
+  if (!previewRef.value) return;
+  
+  try {
+    const dataUrl = await toPng(previewRef.value, {
+      quality: 0.95,
+      // backgroundColor: '#ffffff',
+      pixelRatio: 2,
+    });
+    
+    const link = document.createElement('a');
+    link.download = `${currentModel.value.deviceName}-样机-${Date.now()}.png`;
+    link.href = dataUrl;
+    link.click();
+  } catch (error) {
+    console.error('导出图片失败:', error);
+  }
 };
 </script>
 
@@ -178,32 +200,38 @@ const resetScreenshot = () => {
               </div>
 
               <div v-if="screenshotFile" class="space-y-2">
-                <p class="text-sm font-medium">已选择文件</p>
-                <div
-                  class="flex items-center justify-between p-3 bg-gray-100 rounded-md"
-                >
-                  <span class="text-sm truncate">{{
-                    screenshotFile.name
-                  }}</span>
-                  <Button variant="ghost" size="sm" @click="resetScreenshot">
-                    重新选择
+                  <p class="text-sm font-medium">已选择文件</p>
+                  <div
+                    class="flex items-center justify-between p-3 bg-gray-100 rounded-md"
+                  >
+                    <span class="text-sm truncate">{{
+                      screenshotFile.name
+                    }}</span>
+                    <Button variant="ghost" size="sm" @click="resetScreenshot">
+                      重新选择
+                    </Button>
+                  </div>
+                </div>
+
+                <div v-if="screenshotUrl" class="space-y-2">
+                  <Button @click="exportImage" class="w-full">
+                    导出样机图片
                   </Button>
                 </div>
-              </div>
             </CardContent>
           </Card>
         </div>
         <div>
           <div class="h-full flex items-center justify-center">
-            <Card class="w-full max-w-md">
-              <CardHeader>
-                <CardTitle>样机预览</CardTitle>
-                <CardDescription
-                  >{{ currentModel.deviceName }} 样机效果</CardDescription
-                >
-              </CardHeader>
-              <CardContent>
-                <div class="relative mx-auto" style="perspective: 1000px">
+                  <Card class="w-full max-w-md">
+                    <CardHeader>
+                      <CardTitle>样机预览</CardTitle>
+                      <CardDescription
+                        >{{ currentModel.deviceName }} 样机效果</CardDescription
+                      >
+                    </CardHeader>
+                    <CardContent>
+                      <div ref="previewRef" class="relative mx-auto" style="perspective: 1000px">
                   <div class="relative mx-auto">
                     <!-- 样机图片（背景层） -->
                     <img
@@ -259,6 +287,19 @@ const resetScreenshot = () => {
                           <p>请上传截图</p>
                         </div>
                       </div>
+                      <!-- 白色渐变高光蒙版 -->
+                      <div
+                        class="absolute inset-0 pointer-events-none"
+                        :style="{
+                          borderRadius:
+                            currentModel.watchFaceType === '圆形'
+                              ? '50%'
+                              : currentModel.watchFaceType === '跑道形'
+                              ? '200px'
+                              : '20px',
+                          background: 'linear-gradient(90deg, rgba(255,255,255,0.15) 0%, rgba(255,255,255,0.05) 80%, rgba(255,255,255,0) 100%)',
+                        }"
+                      ></div>
                     </div>
                   </div>
                 </div>
