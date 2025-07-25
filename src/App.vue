@@ -21,9 +21,14 @@ import { Separator } from "@/components/ui/separator";
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 
 const selectedModel = ref("xiaomi-band-10");
+const selectedTemplate = ref("10-standard");
 const screenshotFile = ref<File | null>(null);
 const screenshotUrl = ref<string>("");
 
+/**
+ * 支持的设备型号列表
+ * 用于下拉选择框展示
+ */
 const models = [
   { value: "xiaomi-band-10", label: "小米手环10" },
   // { value: "xiaomi-band-9", label: "小米手环9" },
@@ -31,77 +36,128 @@ const models = [
   // { value: "redmi-watch-5", label: "红米手表5" },
 ];
 
-interface ModelInfo {
+// 监听设备型号变化，自动选择第一个模板
+import { watch } from "vue";
+watch(selectedModel, (newModel) => {
+  const device = deviceModels[newModel];
+  if (device && device.templates.length > 0) {
+    selectedTemplate.value = device.templates[0].id;
+  }
+});
+
+interface ProtoTemplate {
+  id: string;
+  name: string;
+  imagePath: string;
   width: number;
   height: number;
-  deviceName: string;
   watchFaceType: "圆形" | "方形" | "跑道形";
   top: string;
   left: string;
+  rotation: {
+    rotateX: number;
+    rotateY: number;
+    rotateZ: number;
+    scale: number;
+  };
 }
 
-const modelDimensions: Record<string, ModelInfo> = {
+interface DeviceModel {
+  deviceName: string;
+  templates: ProtoTemplate[];
+}
+
+/**
+ * 设备型号配置数据
+ * 包含所有支持的设备型号及其对应的样机模板
+ */
+const deviceModels: Record<string, DeviceModel> = {
   "xiaomi-band-10": {
-    width: 212,
-    height: 520,
     deviceName: "小米手环10",
-    watchFaceType: "跑道形",
-    top: "-79.678px",
-    left: "-8.95px",
+    templates: [
+      {
+        id: "10-standard",
+        name: "模板一",
+        imagePath: "/src/assets/proto/10.png",
+        width: 212,
+        height: 520,
+        watchFaceType: "跑道形",
+        top: "-79.678px",
+        left: "-8.95px",
+        rotation: { rotateX: 342, rotateY: 37, rotateZ: 27.8, scale: 0.515 },
+      },
+      // {
+      //   id: "10-nfc",
+      //   name: "NFC版",
+      //   imagePath: "/src/assets/proto/10-nfc.png",
+      //   width: 212,
+      //   height: 520,
+      //   watchFaceType: "跑道形",
+      //   top: "-79.678px",
+      //   left: "-8.95px",
+      //   rotation: { rotateX: 342, rotateY: 37, rotateZ: 27.8, scale: 0.515 },
+      // },
+    ],
   },
   "xiaomi-band-9": {
-    width: 192,
-    height: 490,
     deviceName: "小米手环9",
-    watchFaceType: "跑道形",
-    top: "-24px",
-    left: "12px",
+    templates: [
+      {
+        id: "9-standard",
+        name: "标准版",
+        imagePath: "/src/assets/proto/9.png",
+        width: 192,
+        height: 490,
+        watchFaceType: "跑道形",
+        top: "-24px",
+        left: "12px",
+        rotation: { rotateX: 10, rotateY: -30, rotateZ: 8, scale: 0.78 },
+      },
+    ],
   },
   "xiaomi-watch-s4": {
-    width: 464,
-    height: 464,
     deviceName: "Xiaomi Watch S4",
-    watchFaceType: "圆形",
-    top: "40px",
-    left: "40px",
+    templates: [
+      {
+        id: "s4-standard",
+        name: "标准版",
+        imagePath: "/src/assets/proto/watch-s4.png",
+        width: 464,
+        height: 464,
+        watchFaceType: "圆形",
+        top: "40px",
+        left: "40px",
+        rotation: { rotateX: 20, rotateY: -15, rotateZ: 0, scale: 0.85 },
+      },
+    ],
   },
   "redmi-watch-5": {
-    width: 340,
-    height: 390,
     deviceName: "红米手表5",
-    watchFaceType: "方形",
-    top: "50px",
-    left: "25px",
+    templates: [
+      {
+        id: "redmi5-standard",
+        name: "标准版",
+        imagePath: "/src/assets/proto/redmi-watch-5.png",
+        width: 340,
+        height: 390,
+        watchFaceType: "方形",
+        top: "50px",
+        left: "25px",
+        rotation: { rotateX: 8, rotateY: -28, rotateZ: 6, scale: 0.79 },
+      },
+    ],
   },
 };
 
-interface RotationConfig {
-  rotateX: number;
-  rotateY: number;
-  rotateZ: number;
-  scale: number;
-}
+/**
+ * 当前选中的样机模板图片路径
+ */
+const currentProtoImage = computed(() => currentModel.value?.imagePath || "");
 
-const defaultRotationConfigs: Record<string, RotationConfig> = {
-  "xiaomi-band-10": { rotateX: 342, rotateY: 37, rotateZ: 27.8, scale: 0.515 },
-  "xiaomi-band-9": { rotateX: 10, rotateY: -30, rotateZ: 8, scale: 0.78 },
-  "xiaomi-watch-s4": { rotateX: 20, rotateY: -15, rotateZ: 0, scale: 0.85 },
-  "redmi-watch-5": { rotateX: 8, rotateY: -28, rotateZ: 6, scale: 0.79 },
-};
-
-const rotationConfigs: Record<string, RotationConfig> = {
-  ...defaultRotationConfigs,
-};
-
-const protoImages: Record<string, string> = {
-  "xiaomi-band-10": "/src/assets/proto/10.png",
-  "xiaomi-band-9": "/src/assets/proto/9.png",
-  "xiaomi-watch-s4": "/src/assets/proto/watch-s4.png",
-  "redmi-watch-5": "/src/assets/proto/redmi-watch-5.png",
-};
-
-const currentProtoImage = computed(() => protoImages[selectedModel.value]);
-
+/**
+ * 处理文件上传
+ * 读取用户选择的截图文件并生成预览URL
+ */
 const handleFileUpload = (event: Event) => {
   const target = event.target as HTMLInputElement;
   const file = target.files?.[0];
@@ -116,13 +172,25 @@ const handleFileUpload = (event: Event) => {
   }
 };
 
-const currentModel = computed(() => modelDimensions[selectedModel.value]);
-const currentRotation = computed(
-  () =>
-    rotationConfigs[selectedModel.value] ||
-    defaultRotationConfigs[selectedModel.value]
-);
+/**
+ * 当前选中的设备型号和模板信息
+ * 包含设备名称、模板配置等完整信息
+ */
+const currentModel = computed(() => {
+  const device = deviceModels[selectedModel.value];
+  const template =
+    device?.templates.find((t) => t.id === selectedTemplate.value) ||
+    device?.templates[0];
+  return {
+    ...template,
+    deviceName: device?.deviceName || "设备",
+  };
+});
 
+/**
+ * 重置截图选择
+ * 清除已选择的文件和预览
+ */
 const resetScreenshot = () => {
   screenshotFile.value = null;
   screenshotUrl.value = "";
@@ -132,8 +200,13 @@ const resetScreenshot = () => {
   if (fileInput) fileInput.value = "";
 };
 
+// 预览区域的DOM引用
 const previewRef = ref<HTMLDivElement | null>(null);
 
+/**
+ * 导出样机图片
+ * 将预览区域渲染为PNG图片并下载
+ */
 const exportImage = async () => {
   if (!previewRef.value) return;
 
@@ -141,7 +214,7 @@ const exportImage = async () => {
     const dataUrl = await toPng(previewRef.value, {
       quality: 0.95,
       // backgroundColor: '#ffffff',
-      pixelRatio: 2,
+      pixelRatio: 2, // 导出2倍高清图片
     });
 
     const link = document.createElement("a");
@@ -179,8 +252,28 @@ const exportImage = async () => {
                       :key="model.value"
                       :value="model.value"
                     >
-                      {{ model.label }} -
-                      {{ modelDimensions[model.value]?.watchFaceType }}
+                      {{ model.label }}
+                    </SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div
+                class="space-y-2"
+                v-if="deviceModels[selectedModel]?.templates.length > 1"
+              >
+                <label class="text-sm font-medium">样机模板</label>
+                <Select v-model="selectedTemplate">
+                  <SelectTrigger>
+                    <SelectValue placeholder="选择样机模板" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem
+                      v-for="template in deviceModels[selectedModel]?.templates"
+                      :key="template.id"
+                      :value="template.id"
+                    >
+                      {{ template.name }}
                     </SelectItem>
                   </SelectContent>
                 </Select>
@@ -256,7 +349,7 @@ const exportImage = async () => {
                             : currentModel.watchFaceType === '跑道形'
                             ? '200px'
                             : '20px',
-                        transform: `rotateX(${currentRotation.rotateX}deg) rotateY(${currentRotation.rotateY}deg) rotateZ(${currentRotation.rotateZ}deg) scale(${currentRotation.scale})`,
+                        transform: `rotateX(${currentModel.rotation.rotateX}deg) rotateY(${currentModel.rotation.rotateY}deg) rotateZ(${currentModel.rotation.rotateZ}deg) scale(${currentModel.rotation.scale})`,
                         transformStyle: 'preserve-3d',
                       }"
                     >
