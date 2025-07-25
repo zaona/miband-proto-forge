@@ -69,8 +69,6 @@ miband-proto-forge/
 ├── src/
 │   ├── App.vue                 # 主应用组件
 │   ├── assets/
-│   │   ├── proto/             # 样机模板图片目录
-│   │   │   ├── 10.png         # 小米手环10
 │   │   └── vue.svg
 │   ├── components/
 │   │   └── ui/               # UI组件（shadcn/ui）
@@ -80,6 +78,8 @@ miband-proto-forge/
 │   ├── style.css             # 全局样式
 │   └── vite-env.d.ts         # 类型声明
 ├── public/
+│   │   ├── proto/             # 样机模板图片目录
+│   │   │   ├── 10.png         # 小米手环10
 │   └── vite.svg              # 网站图标
 ├── package.json              # 项目配置
 ├── tsconfig.json            # TypeScript配置

@@ -78,7 +78,7 @@ const deviceModels: Record<string, DeviceModel> = {
       {
         id: "10-standard",
         name: "模板一",
-        imagePath: "/src/assets/proto/10.png",
+        imagePath: "/proto/10.png",
         width: 212,
         height: 520,
         watchFaceType: "跑道形",
