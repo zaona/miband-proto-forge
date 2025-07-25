@@ -31,7 +31,7 @@ const screenshotUrl = ref<string>("");
  */
 const models = [
   { value: "xiaomi-band-10", label: "小米手环10" },
-  // { value: "xiaomi-band-9", label: "小米手环9" },
+  { value: "xiaomi-band-9p", label: "小米手环9Pro" },
   // { value: "xiaomi-watch-s4", label: "Xiaomi Watch S4" },
   // { value: "redmi-watch-5", label: "红米手表5" },
 ];
@@ -99,19 +99,19 @@ const deviceModels: Record<string, DeviceModel> = {
       // },
     ],
   },
-  "xiaomi-band-9": {
-    deviceName: "小米手环9",
+  "xiaomi-band-9p": {
+    deviceName: "小米手环9Pro",
     templates: [
       {
         id: "9-standard",
-        name: "标准版",
-        imagePath: "/src/assets/proto/9.png",
-        width: 192,
-        height: 490,
-        watchFaceType: "跑道形",
-        top: "-24px",
-        left: "12px",
-        rotation: { rotateX: 10, rotateY: -30, rotateZ: 8, scale: 0.78 },
+        name: "模板一",
+        imagePath: "/proto/9p.png",
+        width: 336,
+        height: 480,
+        watchFaceType: "方形",
+        top: "-84.8px",
+        left: "-35.8px",
+        rotation: { rotateX: 25, rotateY: 331, rotateZ: 35, scale: 0.48 },
       },
     ],
   },
@@ -141,9 +141,9 @@ const deviceModels: Record<string, DeviceModel> = {
         width: 340,
         height: 390,
         watchFaceType: "方形",
-        top: "50px",
-        left: "25px",
-        rotation: { rotateX: 8, rotateY: -28, rotateZ: 6, scale: 0.79 },
+        top: "-85px",
+        left: "-40px",
+        rotation: { rotateX: 26, rotateY: -28, rotateZ: 6, scale: 0.79 },
       },
     ],
   },
@@ -348,7 +348,7 @@ const exportImage = async () => {
                             ? '50%'
                             : currentModel.watchFaceType === '跑道形'
                             ? '200px'
-                            : '20px',
+                            : '48px',
                         transform: `rotateX(${currentModel.rotation.rotateX}deg) rotateY(${currentModel.rotation.rotateY}deg) rotateZ(${currentModel.rotation.rotateZ}deg) scale(${currentModel.rotation.scale})`,
                         transformStyle: 'preserve-3d',
                       }"
@@ -390,9 +390,9 @@ const exportImage = async () => {
                               ? '50%'
                               : currentModel.watchFaceType === '跑道形'
                               ? '200px'
-                              : '20px',
+                              : '48px',
                           background:
-                            'linear-gradient(90deg, rgba(255,255,255,0.15) 0%, rgba(255,255,255,0.05) 80%, rgba(255,255,255,0) 100%)',
+                            'linear-gradient(325deg, rgba(255,255,255,0.05) 0%, rgba(255,255,255,0.1 50%, rgba(255,255,255,0.4) 100%)',
                         }"
                       ></div>
                     </div>
