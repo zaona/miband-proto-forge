@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref, computed } from "vue";
-import { toPng } from 'html-to-image';
+import { toPng } from "html-to-image";
 import {
   Card,
   CardContent,
@@ -18,6 +18,7 @@ import {
 } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
+import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 
 const selectedModel = ref("xiaomi-band-10");
 const screenshotFile = ref<File | null>(null);
@@ -135,20 +136,20 @@ const previewRef = ref<HTMLDivElement | null>(null);
 
 const exportImage = async () => {
   if (!previewRef.value) return;
-  
+
   try {
     const dataUrl = await toPng(previewRef.value, {
       quality: 0.95,
       // backgroundColor: '#ffffff',
       pixelRatio: 2,
     });
-    
-    const link = document.createElement('a');
+
+    const link = document.createElement("a");
     link.download = `${currentModel.value.deviceName}-样机-${Date.now()}.png`;
     link.href = dataUrl;
     link.click();
   } catch (error) {
-    console.error('导出图片失败:', error);
+    console.error("导出图片失败:", error);
   }
 };
 </script>
@@ -156,10 +157,10 @@ const exportImage = async () => {
 <template>
   <div class="min-h-screen bg-gray-50">
     <div class="p-4">
-      <h1 class="text-2xl font-bold mb-6">MiBand Proto Forge</h1>
+      <h1 class="text-2xl font-bold mb-6">⌚ MiBand Proto Forge</h1>
 
       <div class="flex flex-col lg:flex-row gap-4">
-        <div class="h-full">
+        <div class="w-full">
           <Card>
             <CardHeader>
               <CardTitle>配置选项</CardTitle>
@@ -200,38 +201,38 @@ const exportImage = async () => {
               </div>
 
               <div v-if="screenshotFile" class="space-y-2">
-                  <p class="text-sm font-medium">已选择文件</p>
-                  <div
-                    class="flex items-center justify-between p-3 bg-gray-100 rounded-md"
-                  >
-                    <span class="text-sm truncate">{{
-                      screenshotFile.name
-                    }}</span>
-                    <Button variant="ghost" size="sm" @click="resetScreenshot">
-                      重新选择
-                    </Button>
-                  </div>
-                </div>
-
-                <div v-if="screenshotUrl" class="space-y-2">
-                  <Button @click="exportImage" class="w-full">
-                    导出样机图片
+                <p class="text-sm font-medium">已选择文件</p>
+                <div
+                  class="flex items-center justify-between p-3 bg-gray-100 rounded-md"
+                >
+                  <span class="text-sm truncate">{{
+                    screenshotFile.name
+                  }}</span>
+                  <Button variant="ghost" size="sm" @click="resetScreenshot">
+                    重新选择
                   </Button>
                 </div>
+              </div>
+
+              <div v-if="screenshotUrl" class="space-y-2">
+                <Button @click="exportImage" class="w-full">
+                  导出样机图片
+                </Button>
+              </div>
             </CardContent>
           </Card>
         </div>
-        <div>
-          <div class="h-full flex items-center justify-center">
-                  <Card class="w-full max-w-md">
-                    <CardHeader>
-                      <CardTitle>样机预览</CardTitle>
-                      <CardDescription
-                        >{{ currentModel.deviceName }} 样机效果</CardDescription
-                      >
-                    </CardHeader>
-                    <CardContent>
-                      <div ref="previewRef" class="relative mx-auto" style="perspective: 1000px">
+        <ScrollArea class="border rounded-md max-w-md whitespace-nowrap">
+          <div>
+            <Card class="w-md">
+              <CardHeader>
+                <CardTitle>样机预览</CardTitle>
+                <CardDescription
+                  >{{ currentModel.deviceName }} 样机效果</CardDescription
+                >
+              </CardHeader>
+              <CardContent>
+                <div ref="previewRef" class="relative mx-auto">
                   <div class="relative mx-auto">
                     <!-- 样机图片（背景层） -->
                     <img
@@ -297,7 +298,8 @@ const exportImage = async () => {
                               : currentModel.watchFaceType === '跑道形'
                               ? '200px'
                               : '20px',
-                          background: 'linear-gradient(90deg, rgba(255,255,255,0.15) 0%, rgba(255,255,255,0.05) 80%, rgba(255,255,255,0) 100%)',
+                          background:
+                            'linear-gradient(90deg, rgba(255,255,255,0.15) 0%, rgba(255,255,255,0.05) 80%, rgba(255,255,255,0) 100%)',
                         }"
                       ></div>
                     </div>
@@ -312,7 +314,9 @@ const exportImage = async () => {
               </CardContent>
             </Card>
           </div>
-        </div>
+
+          <ScrollBar orientation="horizontal" />
+        </ScrollArea>
       </div>
     </div>
   </div>
