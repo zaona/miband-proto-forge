@@ -2,10 +2,6 @@
 
 **小米手环样机生成器**
 
-### 🎯 项目简介
-
-MiBand Proto Forge 是一个专为小米手环和智能手表设计的专业样机生成工具。它提供了直观的界面，让用户能够轻松地将手环截图嵌入到精美的3D样机模板中，生成高质量的产品展示图片。
-
 ### 🛠️ 技术栈
 
 - **前端框架** - Vue 3 + TypeScript
@@ -51,56 +47,41 @@ pnpm preview
 如果所选设备有多个模板，可以从模板选择器中选择合适的样机模板。
 
 #### 3. 上传截图
-点击"手环截图"区域，选择或拖拽您的手环截图图片。支持JPG、PNG、WEBP格式。
+选择您的手环截图图片。支持JPG、PNG、WEBP格式。
 
 #### 4. 预览效果
-右侧预览区域会实时显示样机效果，您可以：
-- 查看3D旋转效果
-- 确认截图位置和大小
-- 检查整体视觉效果
+右侧预览区域会实时显示样机效果。
 
 #### 5. 导出图片
 点击"导出样机图片"按钮，系统会生成高清PNG图片并自动下载。
 
-### 🎯 项目结构
+### 🎯 支持设备
 
-```
-miband-proto-forge/
-├── src/
-│   ├── App.vue                 # 主应用组件
-│   ├── assets/
-│   │   └── vue.svg
-│   ├── components/
-│   │   └── ui/               # UI组件（shadcn/ui）
-│   ├── lib/
-│   │   └── utils.ts          # 工具函数
-│   ├── main.ts               # 应用入口
-│   ├── style.css             # 全局样式
-│   └── vite-env.d.ts         # 类型声明
-├── public/
-│   │   ├── proto/             # 样机模板图片目录
-│   │   │   ├── 10.png         # 小米手环10
-│   └── vite.svg              # 网站图标
-├── package.json              # 项目配置
-├── tsconfig.json            # TypeScript配置
-├── vite.config.ts           # Vite配置
-└── README.md                # 项目说明（本文件）
-```
+| 设备型号 | 类型 |
+|----------|------|
+| 小米手环10 | 手环 |
+| 小米手环9Pro | 手环 |
+| 小米手环9 | 手环 |
+| Xiaomi Watch S3 | 手表 |
+| Xiaomi Watch S4 | 手表 |
+| 红米手表5 | 手表 |
 
-### 🎨 模板配置说明
+### 🎨 模板配置系统
 
-#### 模板数据结构
+#### 增强的模板数据结构
 ```typescript
 interface ProtoTemplate {
   id: string;           // 模板唯一ID
   name: string;         // 模板名称
   imagePath: string;    // 模板图片路径
-  width: number;        // 模板宽度
-  height: number;       // 模板高度
+  width: number;        // 模板宽度（像素）
+  height: number;       // 模板高度（像素）
   watchFaceType: "圆形" | "方形" | "跑道形";  // 表盘类型
-  top: string;          // 截图顶部偏移
-  left: string;         // 截图左侧偏移
-  rotation: {           // 3D变换参数
+  top: string;          // 截图顶部偏移（CSS单位）
+  left: string;         // 截图左侧偏移（CSS单位）
+  borderRadius: string; // 圆角配置（CSS单位）
+  highlightGradient: string; // 高光渐变（CSS渐变）
+  rotation: {          // 3D变换参数
     rotateX: number;    // X轴旋转角度
     rotateY: number;    // Y轴旋转角度
     rotateZ: number;    // Z轴旋转角度
@@ -109,66 +90,77 @@ interface ProtoTemplate {
 }
 ```
 
-#### 添加新模板示例
+### 🚀 项目结构
+
+```
+miband-proto-forge/
+├── src/
+│   ├── App.vue                 # 主应用组件（含完整模板配置）
+│   ├── assets/
+│   │   └── vue.svg
+│   ├── components/
+│   │   └── ui/               # shadcn/ui组件库
+│   ├── lib/
+│   │   └── utils.ts          # 工具函数
+│   ├── main.ts               # 应用入口
+│   ├── style.css             # 全局样式
+│   └── vite-env.d.ts         # 类型声明
+├── public/
+│   ├── proto/                # 样机模板图片目录
+│   │   ├── 10.png           # 小米手环10模板
+│   │   └── 9p.png           # 通用模板图片
+│   └── vite.svg             # 网站图标
+├── package.json              # 项目配置
+├── tsconfig.json            # TypeScript配置
+├── vite.config.ts           # Vite配置
+└── README.md                # 项目说明（本文件）
+```
+
+### 🔧 开发指南
+
+#### 添加新设备模板
 ```typescript
-// 在deviceModels中添加新设备或模板
+// 在App.vue的deviceModels中添加新设备
 "xiaomi-band-new": {
   deviceName: "小米手环新款",
+  category: "手环",
   templates: [
     {
       id: "new-standard",
       name: "标准版",
-      imagePath: "/src/assets/proto/new.png",
+      imagePath: "/proto/new.png",
       width: 200,
       height: 500,
       watchFaceType: "跑道形",
       top: "-50px",
       left: "0px",
+      borderRadius: "200px",
+      highlightGradient: "linear-gradient(325deg, rgba(255,255,255,0.05) 0%, rgba(255,255,255,0.1) 50%, rgba(255,255,255,0.4) 100%)",
       rotation: { rotateX: 0, rotateY: 0, rotateZ: 0, scale: 1 }
     }
   ]
 }
 ```
 
-### 🔧 开发指南
-
-#### 代码注释
-所有核心代码已添加详细中文注释，包括：
-- 接口定义说明
-- 函数功能描述
-- 变量用途解释
-- 关键逻辑说明
-
-#### 样式定制
-项目使用Tailwind CSS，可通过修改`tailwind.config.js`来自定义样式。
-
-#### 组件扩展
-基于shadcn/ui组件库，可轻松添加新的UI组件。
-
 ### 🤝 贡献指南
 
-欢迎贡献新的设备模板！添加新模板的步骤：
+#### 快速贡献流程
+1. **Fork项目** - 在GitHub上Fork本项目
+2. **创建分支** - `git checkout -b feature/new-device`
+3. **添加模板** - 按照配置规范添加新设备
+4. **测试验证** - 本地测试模板显示和导出效果
+5. **提交PR** - 详细描述新增功能和测试结果
 
-1. **准备素材**
-   - 准备高质量的设备样机图片（建议PNG格式，透明背景）
-   - 测量截图在模板中的精确位置和大小
-
-2. **添加配置**
-   - 在`deviceModels`中添加新的设备型号
-   - 在对应设备的`templates`数组中添加新模板配置
-
-3. **测试验证**
-   - 测试模板显示效果
-   - 验证导出图片质量
-
-4. **提交PR**
-   - 确保代码通过TypeScript检查
-   - 添加必要的注释和文档
+#### 贡献内容建议
+- **新设备支持** - 添加新的手环/手表型号
+- **模板优化** - 改进现有模板的视觉效果
+- **功能增强** - 添加新的导出格式或效果
+- **文档完善** - 补充使用指南和开发文档
 
 ### 📄 许可证
 
-MIT License
+MIT License - 详见 [LICENSE](LICENSE) 文件
 
 ### 🙏 致谢
 
-- 米坛开发者中心
+- **米坛开发者中心**

@@ -35,17 +35,18 @@ const deviceModels: Record<string, DeviceModel> = {
     category: "手环",
     templates: [
       {
-        id: "10-1",
-        name: "模板一",
-        imagePath: "/proto/10.png",
-        width: 212,
-        height: 520,
-        watchFaceType: "跑道形",
-        top: "-79.678px",
-        left: "-8.95px",
-        borderRadius: "200px",
-        rotation: { rotateX: 342, rotateY: 37, rotateZ: 27.8, scale: 0.515 },
-      },
+            id: "10-1",
+            name: "模板一",
+            imagePath: "/proto/10.png",
+            width: 212,
+            height: 520,
+            watchFaceType: "跑道形",
+            top: "-79.678px",
+            left: "-8.95px",
+            borderRadius: "200px",
+            highlightGradient: "linear-gradient(325deg, rgba(255,255,255,0.05) 0%, rgba(255,255,255,0.1) 50%, rgba(255,255,255,0.4) 100%)",
+            rotation: { rotateX: 342, rotateY: 37, rotateZ: 27.8, scale: 0.515 },
+          },
     ],
   },
   "xiaomi-band-9p": {
@@ -62,6 +63,7 @@ const deviceModels: Record<string, DeviceModel> = {
         top: "-84.8px",
         left: "-35.8px",
         borderRadius: "48px",
+        highlightGradient: "linear-gradient(325deg, rgba(255,255,255,0.05) 0%, rgba(255,255,255,0.1) 50%, rgba(255,255,255,0.4) 100%)",
         rotation: { rotateX: 25, rotateY: 331, rotateZ: 35, scale: 0.48 },
       },
       {
@@ -74,6 +76,7 @@ const deviceModels: Record<string, DeviceModel> = {
         top: "-84.8px",
         left: "-35.8px",
         borderRadius: "48px",
+        highlightGradient: "linear-gradient(325deg, rgba(255,255,255,0.05) 0%, rgba(255,255,255,0.1) 50%, rgba(255,255,255,0.4) 100%)",
         rotation: { rotateX: 25, rotateY: 331, rotateZ: 35, scale: 0.48 },
       },
     ],
@@ -83,17 +86,18 @@ const deviceModels: Record<string, DeviceModel> = {
     category: "手环",
     templates: [
       {
-        id: "9-1",
-        name: "模板一",
-        imagePath: "/proto/9p.png",
-        width: 336,
-        height: 480,
-        watchFaceType: "方形",
-        top: "-84.8px",
-        left: "-35.8px",
-        borderRadius: "48px",
-        rotation: { rotateX: 25, rotateY: 331, rotateZ: 35, scale: 0.48 },
-      },
+            id: "9-1",
+            name: "模板一",
+            imagePath: "/proto/9p.png",
+            width: 336,
+            height: 480,
+            watchFaceType: "方形",
+            top: "-84.8px",
+            left: "-35.8px",
+            borderRadius: "48px",
+            highlightGradient: "linear-gradient(325deg, rgba(255,255,255,0.05) 0%, rgba(255,255,255,0.1) 50%, rgba(255,255,255,0.4) 100%)",
+            rotation: { rotateX: 25, rotateY: 331, rotateZ: 35, scale: 0.48 },
+          },
     ],
   },
   "xiaomi-watch-s3": {
@@ -101,17 +105,18 @@ const deviceModels: Record<string, DeviceModel> = {
     category: "手表",
     templates: [
       {
-        id: "s3-1",
-        name: "模板一",
-        imagePath: "/proto/9p.png",
-        width: 336,
-        height: 480,
-        watchFaceType: "方形",
-        top: "-84.8px",
-        left: "-35.8px",
-        borderRadius: "48px",
-        rotation: { rotateX: 25, rotateY: 331, rotateZ: 35, scale: 0.48 },
-      },
+            id: "s3-1",
+            name: "模板一",
+            imagePath: "/proto/9p.png",
+            width: 336,
+            height: 480,
+            watchFaceType: "方形",
+            top: "-84.8px",
+            left: "-35.8px",
+            borderRadius: "48px",
+            highlightGradient: "linear-gradient(325deg, rgba(255,255,255,0.05) 0%, rgba(255,255,255,0.1) 50%, rgba(255,255,255,0.4) 100%)",
+            rotation: { rotateX: 25, rotateY: 331, rotateZ: 35, scale: 0.48 },
+          },
     ],
   },
   "xiaomi-watch-s4": {
@@ -119,17 +124,18 @@ const deviceModels: Record<string, DeviceModel> = {
     category: "手表",
     templates: [
       {
-        id: "s4-1",
-        name: "模板一",
-        imagePath: "/proto/9p.png",
-        width: 336,
-        height: 480,
-        watchFaceType: "方形",
-        top: "-84.8px",
-        left: "-35.8px",
-        borderRadius: "48px",
-        rotation: { rotateX: 25, rotateY: 331, rotateZ: 35, scale: 0.48 },
-      },
+            id: "s4-1",
+            name: "模板一",
+            imagePath: "/proto/9p.png",
+            width: 336,
+            height: 480,
+            watchFaceType: "方形",
+            top: "-84.8px",
+            left: "-35.8px",
+            borderRadius: "48px",
+            highlightGradient: "linear-gradient(325deg, rgba(255,255,255,0.05) 0%, rgba(255,255,255,0.1) 50%, rgba(255,255,255,0.4) 100%)",
+            rotation: { rotateX: 25, rotateY: 331, rotateZ: 35, scale: 0.48 },
+          },
     ],
   },
   "redmi-watch-5": {
@@ -137,17 +143,18 @@ const deviceModels: Record<string, DeviceModel> = {
     category: "手表",
     templates: [
       {
-        id: "r5-1",
-        name: "模板一",
-        imagePath: "/proto/9p.png",
-        width: 336,
-        height: 480,
-        watchFaceType: "方形",
-        top: "-84.8px",
-        left: "-35.8px",
-        borderRadius: "48px",
-        rotation: { rotateX: 25, rotateY: 331, rotateZ: 35, scale: 0.48 },
-      },
+            id: "r5-1",
+            name: "模板一",
+            imagePath: "/proto/9p.png",
+            width: 336,
+            height: 480,
+            watchFaceType: "方形",
+            top: "-84.8px",
+            left: "-35.8px",
+            borderRadius: "48px",
+            highlightGradient: "linear-gradient(325deg, rgba(255,255,255,0.05) 0%, rgba(255,255,255,0.1) 50%, rgba(255,255,255,0.4) 100%)",
+            rotation: { rotateX: 25, rotateY: 331, rotateZ: 35, scale: 0.48 },
+          },
     ],
   },
 };
@@ -171,6 +178,7 @@ interface ProtoTemplate {
   top: string;
   left: string;
   borderRadius: string;
+  highlightGradient: string;
   rotation: {
     rotateX: number;
     rotateY: number;
@@ -436,8 +444,7 @@ const exportImage = async () => {
                         class="absolute inset-0 pointer-events-none"
                         :style="{
                           borderRadius: currentModel.borderRadius,
-                          background:
-                            'linear-gradient(325deg, rgba(255,255,255,0.05) 0%, rgba(255,255,255,0.1 50%, rgba(255,255,255,0.4) 100%)',
+                          background: currentModel.highlightGradient,
                         }"
                       ></div>
                     </div>
