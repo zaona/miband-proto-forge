@@ -26,17 +26,131 @@ const screenshotFile = ref<File | null>(null);
 const screenshotUrl = ref<string>("");
 
 /**
- * 支持的设备型号列表
- * 用于下拉选择框展示
+ * 设备型号配置数据
+ * 统一存储所有设备信息，包含显示名称和模板配置
  */
-const models = [
-  { value: "xiaomi-band-10", label: "小米手环10" },
-  { value: "xiaomi-band-9p", label: "小米手环9Pro" },
-  { value: "xiaomi-band-9", label: "小米手环9" },
-  { value: "xiaomi-watch-s3", label: "Xiaomi Watch S3" },
-  { value: "xiaomi-watch-s4", label: "Xiaomi Watch S4" },
-  { value: "redmi-watch-5", label: "红米手表5" },
-];
+const deviceModels: Record<string, DeviceModel> = {
+  "xiaomi-band-10": {
+    deviceName: "小米手环10",
+    category: "手环",
+    templates: [
+      {
+        id: "10-1",
+        name: "模板一",
+        imagePath: "/proto/10.png",
+        width: 212,
+        height: 520,
+        watchFaceType: "跑道形",
+        top: "-79.678px",
+        left: "-8.95px",
+        borderRadius: "200px",
+        rotation: { rotateX: 342, rotateY: 37, rotateZ: 27.8, scale: 0.515 },
+      },
+    ],
+  },
+  "xiaomi-band-9p": {
+    deviceName: "小米手环9Pro",
+    category: "手环",
+    templates: [
+      {
+        id: "9p-1",
+        name: "模板一",
+        imagePath: "/proto/9p.png",
+        width: 336,
+        height: 480,
+        watchFaceType: "方形",
+        top: "-84.8px",
+        left: "-35.8px",
+        borderRadius: "48px",
+        rotation: { rotateX: 25, rotateY: 331, rotateZ: 35, scale: 0.48 },
+      },
+      {
+        id: "9p-2",
+        name: "模板二",
+        imagePath: "/proto/9p.png",
+        width: 336,
+        height: 480,
+        watchFaceType: "方形",
+        top: "-84.8px",
+        left: "-35.8px",
+        borderRadius: "48px",
+        rotation: { rotateX: 25, rotateY: 331, rotateZ: 35, scale: 0.48 },
+      },
+    ],
+  },
+  "xiaomi-band-9": {
+    deviceName: "小米手环9",
+    category: "手环",
+    templates: [
+      {
+        id: "9-1",
+        name: "模板一",
+        imagePath: "/proto/9p.png",
+        width: 336,
+        height: 480,
+        watchFaceType: "方形",
+        top: "-84.8px",
+        left: "-35.8px",
+        borderRadius: "48px",
+        rotation: { rotateX: 25, rotateY: 331, rotateZ: 35, scale: 0.48 },
+      },
+    ],
+  },
+  "xiaomi-watch-s3": {
+    deviceName: "Xiaomi Watch S3",
+    category: "手表",
+    templates: [
+      {
+        id: "s3-1",
+        name: "模板一",
+        imagePath: "/proto/9p.png",
+        width: 336,
+        height: 480,
+        watchFaceType: "方形",
+        top: "-84.8px",
+        left: "-35.8px",
+        borderRadius: "48px",
+        rotation: { rotateX: 25, rotateY: 331, rotateZ: 35, scale: 0.48 },
+      },
+    ],
+  },
+  "xiaomi-watch-s4": {
+    deviceName: "Xiaomi Watch S4",
+    category: "手表",
+    templates: [
+      {
+        id: "s4-1",
+        name: "模板一",
+        imagePath: "/proto/9p.png",
+        width: 336,
+        height: 480,
+        watchFaceType: "方形",
+        top: "-84.8px",
+        left: "-35.8px",
+        borderRadius: "48px",
+        rotation: { rotateX: 25, rotateY: 331, rotateZ: 35, scale: 0.48 },
+      },
+    ],
+  },
+  "redmi-watch-5": {
+    deviceName: "红米手表5",
+    category: "手表",
+    templates: [
+      {
+        id: "r5-1",
+        name: "模板一",
+        imagePath: "/proto/9p.png",
+        width: 336,
+        height: 480,
+        watchFaceType: "方形",
+        top: "-84.8px",
+        left: "-35.8px",
+        borderRadius: "48px",
+        rotation: { rotateX: 25, rotateY: 331, rotateZ: 35, scale: 0.48 },
+      },
+    ],
+  },
+};
 
 // 监听设备型号变化，自动选择第一个模板
 import { watch } from "vue";
@@ -56,6 +170,7 @@ interface ProtoTemplate {
   watchFaceType: "圆形" | "方形" | "跑道形";
   top: string;
   left: string;
+  borderRadius: string;
   rotation: {
     rotateX: number;
     rotateY: number;
@@ -66,127 +181,33 @@ interface ProtoTemplate {
 
 interface DeviceModel {
   deviceName: string;
+  category: string;
   templates: ProtoTemplate[];
 }
-
-/**
- * 设备型号配置数据
- * 包含所有支持的设备型号及其对应的样机模板
- */
-const deviceModels: Record<string, DeviceModel> = {
-  "xiaomi-band-10": {
-    deviceName: "小米手环10",
-    templates: [
-      {
-        id: "10-1",
-        name: "模板一",
-        imagePath: "/proto/10.png",
-        width: 212,
-        height: 520,
-        watchFaceType: "跑道形",
-        top: "-79.678px",
-        left: "-8.95px",
-        rotation: { rotateX: 342, rotateY: 37, rotateZ: 27.8, scale: 0.515 },
-      },
-      // {
-      //   id: "10-1",
-      //   name: "模板一",
-      //   imagePath: "/proto/10.png",
-      //   width: 212,
-      //   height: 520,
-      //   watchFaceType: "跑道形",
-      //   top: "-79.678px",
-      //   left: "-8.95px",
-      //   rotation: { rotateX: 342, rotateY: 37, rotateZ: 27.8, scale: 0.515 },
-      // },
-    ],
-  },
-  "xiaomi-band-9p": {
-    deviceName: "小米手环9Pro",
-    templates: [
-      {
-        id: "9p-1",
-        name: "模板一",
-        imagePath: "/proto/9p.png",
-        width: 336,
-        height: 480,
-        watchFaceType: "方形",
-        top: "-84.8px",
-        left: "-35.8px",
-        rotation: { rotateX: 25, rotateY: 331, rotateZ: 35, scale: 0.48 },
-      },
-    ],
-  },
-  "xiaomi-band-9": {
-    deviceName: "小米手环9",
-    templates: [
-      {
-        id: "9-1",
-        name: "模板一",
-        imagePath: "/proto/9p.png",
-        width: 336,
-        height: 480,
-        watchFaceType: "方形",
-        top: "-84.8px",
-        left: "-35.8px",
-        rotation: { rotateX: 25, rotateY: 331, rotateZ: 35, scale: 0.48 },
-      },
-    ],
-  },
-  "xiaomi-watch-s3": {
-    deviceName: "Xiaomi Watch S3",
-    templates: [
-      {
-        id: "s3-1",
-        name: "模板一",
-        imagePath: "/proto/9p.png",
-        width: 336,
-        height: 480,
-        watchFaceType: "方形",
-        top: "-84.8px",
-        left: "-35.8px",
-        rotation: { rotateX: 25, rotateY: 331, rotateZ: 35, scale: 0.48 },
-      },
-    ],
-  },
-  "xiaomi-watch-s4": {
-    deviceName: "Xiaomi Watch S4",
-    templates: [
-      {
-        id: "s4-1",
-        name: "模板一",
-        imagePath: "/proto/9p.png",
-        width: 336,
-        height: 480,
-        watchFaceType: "方形",
-        top: "-84.8px",
-        left: "-35.8px",
-        rotation: { rotateX: 25, rotateY: 331, rotateZ: 35, scale: 0.48 },
-      },
-    ],
-  },
-  "redmi-watch-5": {
-    deviceName: "红米手表5",
-    templates: [
-      {
-        id: "r5-1",
-        name: "模板一",
-        imagePath: "/proto/9p.png",
-        width: 336,
-        height: 480,
-        watchFaceType: "方形",
-        top: "-84.8px",
-        left: "-35.8px",
-        rotation: { rotateX: 25, rotateY: 331, rotateZ: 35, scale: 0.48 },
-      },
-    ],
-  },
-};
 
 /**
  * 当前选中的样机模板图片路径
  */
 const currentProtoImage = computed(() => currentModel.value?.imagePath || "");
+
+/**
+ * 获取所有设备型号列表（用于下拉选择框）
+ * 返回排序后的设备列表
+ */
+const deviceList = computed(() => {
+  return Object.entries(deviceModels)
+    .map(([key, model]) => ({
+      value: key,
+      deviceName: model.deviceName,
+      category: model.category,
+    }))
+    .sort((a, b) => {
+      if (a.category !== b.category) {
+        return a.category.localeCompare(b.category);
+      }
+      return a.deviceName.localeCompare(b.deviceName);
+    });
+});
 
 /**
  * 处理文件上传
@@ -282,11 +303,11 @@ const exportImage = async () => {
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem
-                      v-for="model in models"
-                      :key="model.value"
-                      :value="model.value"
+                      v-for="device in deviceList"
+                      :key="device.value"
+                      :value="device.value"
                     >
-                      {{ model.label }}
+                      {{ device.deviceName }}
                     </SelectItem>
                   </SelectContent>
                 </Select>
@@ -377,12 +398,7 @@ const exportImage = async () => {
                         left: currentModel.left,
                         width: currentModel.width + 'px',
                         height: currentModel.height + 'px',
-                        borderRadius:
-                          currentModel.watchFaceType === '圆形'
-                            ? '50%'
-                            : currentModel.watchFaceType === '跑道形'
-                            ? '200px'
-                            : '48px',
+                        borderRadius: currentModel.borderRadius,
                         transform: `rotateX(${currentModel.rotation.rotateX}deg) rotateY(${currentModel.rotation.rotateY}deg) rotateZ(${currentModel.rotation.rotateZ}deg) scale(${currentModel.rotation.scale})`,
                         transformStyle: 'preserve-3d',
                       }"
@@ -419,12 +435,7 @@ const exportImage = async () => {
                       <div
                         class="absolute inset-0 pointer-events-none"
                         :style="{
-                          borderRadius:
-                            currentModel.watchFaceType === '圆形'
-                              ? '50%'
-                              : currentModel.watchFaceType === '跑道形'
-                              ? '200px'
-                              : '48px',
+                          borderRadius: currentModel.borderRadius,
                           background:
                             'linear-gradient(325deg, rgba(255,255,255,0.05) 0%, rgba(255,255,255,0.1 50%, rgba(255,255,255,0.4) 100%)',
                         }"
