@@ -37,7 +37,7 @@ const deviceModels: Record<string, DeviceModel> = {
       {
         id: "10-1",
         name: "模板一",
-        imagePath: "/proto/10.png",
+        imagePath: "/proto/10-1.png",
         width: 212,
         height: 520,
         watchFaceType: "跑道形",
@@ -46,6 +46,8 @@ const deviceModels: Record<string, DeviceModel> = {
         borderRadius: "200px",
         highlightGradient:
           "linear-gradient(300deg, rgba(255,255,255,0.05) 0%, rgba(255,255,255,0.1) 50%, rgba(255,255,255,0.4) 100%)",
+        perspective: "none",
+        perspectiveOrigin: "center center",
         rotation: { rotateX: 342, rotateY: 37, rotateZ: 27.8, scale: 0.515 },
       },
     ],
@@ -57,7 +59,7 @@ const deviceModels: Record<string, DeviceModel> = {
       {
         id: "9p-1",
         name: "模板一",
-        imagePath: "/proto/9p.png",
+        imagePath: "/proto/9p-1.png",
         width: 336,
         height: 480,
         watchFaceType: "方形",
@@ -66,8 +68,26 @@ const deviceModels: Record<string, DeviceModel> = {
         borderRadius: "48px",
         highlightGradient:
           "linear-gradient(325deg, rgba(255,255,255,0.05) 0%, rgba(255,255,255,0.1) 50%, rgba(255,255,255,0.4) 100%)",
+        perspective: "none",
+        perspectiveOrigin: "center center",
         rotation: { rotateX: 25, rotateY: 331, rotateZ: 35, scale: 0.48 },
       },
+      // {
+      //   id: "9p-2",
+      //   name: "模板二",
+      //   imagePath: "/proto/9p-2.png",
+      //   width: 336,
+      //   height: 480,
+      //   watchFaceType: "方形",
+      //   top: "-30px",
+      //   left: "-90px",
+      //   borderRadius: "48px",
+      //   highlightGradient:
+      //     "linear-gradient(325deg, rgba(255,255,255,0.05) 0%, rgba(255,255,255,0.1) 50%, rgba(255,255,255,0.4) 100%)",
+      //   perspective: "none",
+      //   perspectiveOrigin: "center center",
+      //   rotation: { rotateX: 20, rotateY: 320, rotateZ: 1, scale: 0.43 },
+      // },
     ],
   },
   // "xiaomi-band-9": {
@@ -172,6 +192,8 @@ interface ProtoTemplate {
   left: string;
   borderRadius: string;
   highlightGradient: string;
+  perspective: string;
+  perspectiveOrigin: string;
   rotation: {
     rotateX: number;
     rotateY: number;
@@ -382,7 +404,7 @@ const exportImage = async () => {
               </CardHeader>
               <CardContent>
                 <div ref="previewRef" class="relative mx-auto">
-                  <div class="relative mx-auto">
+                    <div class="relative mx-auto" :style="{ perspective: currentModel.perspective, perspectiveOrigin: currentModel.perspectiveOrigin }">
                     <!-- 样机图片（背景层） -->
                     <img
                       v-if="currentProtoImage"
