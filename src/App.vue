@@ -70,7 +70,7 @@ const deviceModels: Record<string, DeviceModel> = {
           "linear-gradient(325deg, rgba(255,255,255,0.05) 0%, rgba(255,255,255,0.1) 50%, rgba(255,255,255,0.4) 100%)",
         perspective: "none",
         perspectiveOrigin: "center center",
-        rotation: { rotateX: 25, rotateY: 331, rotateZ: 35, scale: 0.48 },
+        rotation: { rotateX: 25, rotateY: 331, rotateZ: 35, scale: 0.5 },
       },
       // {
       //   id: "9p-2",
