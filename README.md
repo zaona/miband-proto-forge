@@ -109,7 +109,7 @@ miband-proto-forge/
 │   ├── proto/                # 样机模板图片目录
 │   │   ├── 10.png           # 小米手环10模板
 │   │   └── 9p.png           # 通用模板图片
-│   └── vite.svg             # 网站图标
+│   └── logo.svg             # 网站图标
 ├── package.json              # 项目配置
 ├── tsconfig.json            # TypeScript配置
 ├── vite.config.ts           # Vite配置

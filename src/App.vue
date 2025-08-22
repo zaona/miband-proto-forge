@@ -308,7 +308,10 @@ const exportImage = async () => {
 <template>
   <div class="min-h-screen bg-gray-50">
     <div class="p-4">
-      <h1 class="text-2xl font-bold mb-6">⌚ MiBand Proto Forge</h1>
+      <div class="flex gap-2 mb-6 items-center">
+        <img src="/logo.svg" alt="logo" class="w-8 h-8 mt-1" />
+        <h1 class="text-2xl font-bold">MiBand Proto Forge</h1>
+      </div>
 
       <div class="flex flex-col lg:flex-row gap-4">
         <div class="w-full">
@@ -404,7 +407,13 @@ const exportImage = async () => {
               </CardHeader>
               <CardContent>
                 <div ref="previewRef" class="relative mx-auto">
-                    <div class="relative mx-auto" :style="{ perspective: currentModel.perspective, perspectiveOrigin: currentModel.perspectiveOrigin }">
+                  <div
+                    class="relative mx-auto"
+                    :style="{
+                      perspective: currentModel.perspective,
+                      perspectiveOrigin: currentModel.perspectiveOrigin,
+                    }"
+                  >
                     <!-- 样机图片（背景层） -->
                     <img
                       v-if="currentProtoImage"
