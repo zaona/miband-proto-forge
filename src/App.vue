@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed } from "vue";
+import { ref, computed, watch, onMounted, onBeforeUnmount } from "vue";
 import { toPng } from "html-to-image";
 import {
   Card,
@@ -19,16 +19,34 @@ import {
 import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
+import { getPerspectiveTransform, type Point } from "@/lib/perspective";
 
 const selectedModel = ref("xiaomi-band-10");
-const selectedTemplate = ref("10-standard");
+const selectedTemplate = ref("10-1");
 const screenshotFile = ref<File | null>(null);
 const screenshotUrl = ref<string>("");
 
-/**
- * 设备型号配置数据
- * 统一存储所有设备信息，包含显示名称和模板配置
- */
+interface ProtoTemplate {
+  id: string;
+  name: string;
+  imagePath: string;
+  watchFaceType: "圆形" | "方形" | "跑道形";
+  borderRadius: string;
+  highlightGradient: string;
+  screenSource: {
+    width: number;
+    height: number;
+  };
+  // 顺序固定：TL, TR, BR, BL（基于样机原图像素坐标）
+  screenCorners: Point[];
+}
+
+interface DeviceModel {
+  deviceName: string;
+  category: string;
+  templates: ProtoTemplate[];
+}
+
 const deviceModels: Record<string, DeviceModel> = {
   "xiaomi-band-10": {
     deviceName: "小米手环10",
@@ -38,17 +56,32 @@ const deviceModels: Record<string, DeviceModel> = {
         id: "10-1",
         name: "模板一",
         imagePath: "/proto/10-1.png",
-        width: 212,
-        height: 520,
         watchFaceType: "跑道形",
-        top: "-79.678px",
-        left: "-8.95px",
         borderRadius: "200px",
         highlightGradient:
           "linear-gradient(300deg, rgba(255,255,255,0.05) 0%, rgba(255,255,255,0.1) 50%, rgba(255,255,255,0.4) 100%)",
-        perspective: "none",
-        perspectiveOrigin: "center center",
-        rotation: { rotateX: 342, rotateY: 37, rotateZ: 27.8, scale: 0.515 },
+        screenSource: {
+          width: 212,
+          height: 520,
+        },
+        screenCorners: [
+          {
+            x: 312,
+            y: 128,
+          },
+          {
+            x: 545,
+            y: 198,
+          },
+          {
+            x: 255,
+            y: 932,
+          },
+          {
+            x: 31,
+            y: 841,
+          },
+        ],
       },
     ],
   },
@@ -60,163 +93,75 @@ const deviceModels: Record<string, DeviceModel> = {
         id: "9p-1",
         name: "模板一",
         imagePath: "/proto/9p-1.png",
-        width: 336,
-        height: 480,
         watchFaceType: "方形",
-        top: "-84.8px",
-        left: "-35.8px",
         borderRadius: "48px",
         highlightGradient:
           "linear-gradient(325deg, rgba(255,255,255,0.05) 0%, rgba(255,255,255,0.1) 50%, rgba(255,255,255,0.4) 100%)",
-        perspective: "none",
-        perspectiveOrigin: "center center",
-        rotation: { rotateX: 25, rotateY: 331, rotateZ: 35, scale: 0.5 },
+        screenSource: {
+          width: 336,
+          height: 480,
+        },
+        screenCorners: [
+          {
+            x: 326,
+            y: 75,
+          },
+          {
+            x: 605,
+            y: 203,
+          },
+          {
+            x: 324,
+            y: 696,
+          },
+          {
+            x: 51,
+            y: 557,
+          },
+        ],
       },
-      // {
-      //   id: "9p-2",
-      //   name: "模板二",
-      //   imagePath: "/proto/9p-2.png",
-      //   width: 336,
-      //   height: 480,
-      //   watchFaceType: "方形",
-      //   top: "-30px",
-      //   left: "-90px",
-      //   borderRadius: "48px",
-      //   highlightGradient:
-      //     "linear-gradient(325deg, rgba(255,255,255,0.05) 0%, rgba(255,255,255,0.1) 50%, rgba(255,255,255,0.4) 100%)",
-      //   perspective: "none",
-      //   perspectiveOrigin: "center center",
-      //   rotation: { rotateX: 20, rotateY: 320, rotateZ: 1, scale: 0.43 },
-      // },
+      {
+        id: "9p-2",
+        name: "模板二",
+        imagePath: "/proto/9p-2.png",
+        watchFaceType: "方形",
+        borderRadius: "48px",
+        highlightGradient:
+          "linear-gradient(325deg, rgba(255,255,255,0.05) 0%, rgba(255,255,255,0.1) 50%, rgba(255,255,255,0.4) 100%)",
+        screenSource: {
+          width: 336,
+          height: 480,
+        },
+        screenCorners: [
+          {
+            x: 80,
+            y: 356,
+          },
+          {
+            x: 411,
+            y: 276,
+          },
+          {
+            x: 407,
+            y: 920,
+          },
+          {
+            x: 66,
+            y: 972,
+          },
+        ],
+      },
     ],
   },
-  // "xiaomi-band-9": {
-  //   deviceName: "小米手环9",
-  //   category: "手环",
-  //   templates: [
-  //     {
-  //       id: "9-1",
-  //       name: "模板一",
-  //       imagePath: "/proto/9p.png",
-  //       width: 336,
-  //       height: 480,
-  //       watchFaceType: "方形",
-  //       top: "-84.8px",
-  //       left: "-35.8px",
-  //       borderRadius: "48px",
-  //       highlightGradient:
-  //         "linear-gradient(325deg, rgba(255,255,255,0.05) 0%, rgba(255,255,255,0.1) 50%, rgba(255,255,255,0.4) 100%)",
-  //       rotation: { rotateX: 25, rotateY: 331, rotateZ: 35, scale: 0.48 },
-  //     },
-  //   ],
-  // },
-  // "xiaomi-watch-s3": {
-  //   deviceName: "Xiaomi Watch S3",
-  //   category: "手表",
-  //   templates: [
-  //     {
-  //       id: "s3-1",
-  //       name: "模板一",
-  //       imagePath: "/proto/9p.png",
-  //       width: 336,
-  //       height: 480,
-  //       watchFaceType: "方形",
-  //       top: "-84.8px",
-  //       left: "-35.8px",
-  //       borderRadius: "48px",
-  //       highlightGradient:
-  //         "linear-gradient(325deg, rgba(255,255,255,0.05) 0%, rgba(255,255,255,0.1) 50%, rgba(255,255,255,0.4) 100%)",
-  //       rotation: { rotateX: 25, rotateY: 331, rotateZ: 35, scale: 0.48 },
-  //     },
-  //   ],
-  // },
-  // "xiaomi-watch-s4": {
-  //   deviceName: "Xiaomi Watch S4",
-  //   category: "手表",
-  //   templates: [
-  //     {
-  //       id: "s4-1",
-  //       name: "模板一",
-  //       imagePath: "/proto/9p.png",
-  //       width: 336,
-  //       height: 480,
-  //       watchFaceType: "方形",
-  //       top: "-84.8px",
-  //       left: "-35.8px",
-  //       borderRadius: "48px",
-  //       highlightGradient:
-  //         "linear-gradient(325deg, rgba(255,255,255,0.05) 0%, rgba(255,255,255,0.1) 50%, rgba(255,255,255,0.4) 100%)",
-  //       rotation: { rotateX: 25, rotateY: 331, rotateZ: 35, scale: 0.48 },
-  //     },
-  //   ],
-  // },
-  // "redmi-watch-5": {
-  //   deviceName: "红米手表5",
-  //   category: "手表",
-  //   templates: [
-  //     {
-  //       id: "r5-1",
-  //       name: "模板一",
-  //       imagePath: "/proto/9p.png",
-  //       width: 336,
-  //       height: 480,
-  //       watchFaceType: "方形",
-  //       top: "-84.8px",
-  //       left: "-35.8px",
-  //       borderRadius: "48px",
-  //       highlightGradient:
-  //         "linear-gradient(325deg, rgba(255,255,255,0.05) 0%, rgba(255,255,255,0.1) 50%, rgba(255,255,255,0.4) 100%)",
-  //       rotation: { rotateX: 25, rotateY: 331, rotateZ: 35, scale: 0.48 },
-  //     },
-  //   ],
-  // },
 };
 
-// 监听设备型号变化，自动选择第一个模板
-import { watch } from "vue";
 watch(selectedModel, (newModel) => {
   const device = deviceModels[newModel];
-  if (device && device.templates.length > 0) {
+  if (device?.templates.length) {
     selectedTemplate.value = device.templates[0].id;
   }
 });
 
-interface ProtoTemplate {
-  id: string;
-  name: string;
-  imagePath: string;
-  width: number;
-  height: number;
-  watchFaceType: "圆形" | "方形" | "跑道形";
-  top: string;
-  left: string;
-  borderRadius: string;
-  highlightGradient: string;
-  perspective: string;
-  perspectiveOrigin: string;
-  rotation: {
-    rotateX: number;
-    rotateY: number;
-    rotateZ: number;
-    scale: number;
-  };
-}
-
-interface DeviceModel {
-  deviceName: string;
-  category: string;
-  templates: ProtoTemplate[];
-}
-
-/**
- * 当前选中的样机模板图片路径
- */
-const currentProtoImage = computed(() => currentModel.value?.imagePath || "");
-
-/**
- * 获取所有设备型号列表（用于下拉选择框）
- * 返回排序后的设备列表
- */
 const deviceList = computed(() => {
   return Object.entries(deviceModels)
     .map(([key, model]) => ({
@@ -232,67 +177,184 @@ const deviceList = computed(() => {
     });
 });
 
-/**
- * 处理文件上传
- * 读取用户选择的截图文件并生成预览URL
- */
-const handleFileUpload = (event: Event) => {
-  const target = event.target as HTMLInputElement;
-  const file = target.files?.[0];
-
-  if (file) {
-    screenshotFile.value = file;
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      screenshotUrl.value = e.target?.result as string;
-    };
-    reader.readAsDataURL(file);
-  }
-};
-
-/**
- * 当前选中的设备型号和模板信息
- * 包含设备名称、模板配置等完整信息
- */
 const currentModel = computed(() => {
   const device = deviceModels[selectedModel.value];
   const template =
     device?.templates.find((t) => t.id === selectedTemplate.value) ||
     device?.templates[0];
+
+  if (!device || !template) return null;
   return {
     ...template,
-    deviceName: device?.deviceName || "设备",
+    deviceName: device.deviceName,
   };
 });
 
-/**
- * 重置截图选择
- * 清除已选择的文件和预览
- */
+const currentProtoImage = computed(() => currentModel.value?.imagePath || "");
+
+const handleFileUpload = (event: Event) => {
+  const target = event.target as HTMLInputElement;
+  const file = target.files?.[0];
+
+  if (!file) return;
+
+  screenshotFile.value = file;
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    screenshotUrl.value = e.target?.result as string;
+  };
+  reader.readAsDataURL(file);
+};
+
 const resetScreenshot = () => {
   screenshotFile.value = null;
   screenshotUrl.value = "";
   const fileInput = document.getElementById(
-    "screenshot-upload"
-  ) as HTMLInputElement;
+    "screenshot-upload",
+  ) as HTMLInputElement | null;
   if (fileInput) fileInput.value = "";
 };
 
-// 预览区域的DOM引用
 const previewRef = ref<HTMLDivElement | null>(null);
+const protoImageRef = ref<HTMLImageElement | null>(null);
 
-/**
- * 导出样机图片
- * 将预览区域渲染为PNG图片并下载
- */
+const protoSize = ref({
+  naturalWidth: 1,
+  naturalHeight: 1,
+  renderWidth: 1,
+  renderHeight: 1,
+});
+
+const updateProtoSize = () => {
+  const el = protoImageRef.value;
+  if (!el) return;
+  protoSize.value = {
+    naturalWidth: el.naturalWidth || 1,
+    naturalHeight: el.naturalHeight || 1,
+    renderWidth: el.clientWidth || 1,
+    renderHeight: el.clientHeight || 1,
+  };
+};
+
+const cornerEditMode = ref(false);
+const editableCorners = ref<Point[]>([]);
+const draggingCornerIndex = ref<number | null>(null);
+
+const displayCornersFromConfig = computed<Point[]>(() => {
+  const model = currentModel.value;
+  if (!model) return [];
+
+  const scaleX = protoSize.value.renderWidth / protoSize.value.naturalWidth;
+  const scaleY = protoSize.value.renderHeight / protoSize.value.naturalHeight;
+
+  return model.screenCorners.map((p) => ({
+    x: p.x * scaleX,
+    y: p.y * scaleY,
+  }));
+});
+
+const syncEditableCorners = () => {
+  editableCorners.value = displayCornersFromConfig.value.map((p) => ({ ...p }));
+};
+
+watch(
+  [
+    currentModel,
+    () => protoSize.value.renderWidth,
+    () => protoSize.value.renderHeight,
+  ],
+  () => {
+    if (!cornerEditMode.value) {
+      syncEditableCorners();
+    }
+  },
+  { immediate: true },
+);
+
+const effectiveCorners = computed<Point[]>(() => {
+  if (cornerEditMode.value && editableCorners.value.length === 4) {
+    return editableCorners.value;
+  }
+  return displayCornersFromConfig.value;
+});
+
+const warpMatrix = computed(() => {
+  const model = currentModel.value;
+  if (!model || effectiveCorners.value.length !== 4) return "none";
+
+  return getPerspectiveTransform(
+    model.screenSource.width,
+    model.screenSource.height,
+    effectiveCorners.value,
+  );
+});
+
+const guidePolygonPoints = computed(() => {
+  return effectiveCorners.value.map((p) => `${p.x},${p.y}`).join(" ");
+});
+
+const editableCornersAsConfig = computed(() => {
+  if (effectiveCorners.value.length !== 4) return "[]";
+
+  const scaleX = protoSize.value.naturalWidth / protoSize.value.renderWidth;
+  const scaleY = protoSize.value.naturalHeight / protoSize.value.renderHeight;
+
+  const corners = effectiveCorners.value.map((p) => ({
+    x: Math.round(p.x * scaleX),
+    y: Math.round(p.y * scaleY),
+  }));
+
+  return JSON.stringify(corners, null, 2);
+});
+
+const toggleCornerEdit = () => {
+  cornerEditMode.value = !cornerEditMode.value;
+  syncEditableCorners();
+};
+
+const resetEditableCorners = () => {
+  syncEditableCorners();
+};
+
+const copyCornerConfig = async () => {
+  try {
+    await navigator.clipboard.writeText(editableCornersAsConfig.value);
+  } catch (err) {
+    console.error("复制角点配置失败", err);
+  }
+};
+
+const handleCornerPointerDown = (index: number, event: PointerEvent) => {
+  if (!cornerEditMode.value) return;
+  draggingCornerIndex.value = index;
+  (event.target as HTMLElement).setPointerCapture?.(event.pointerId);
+};
+
+const handlePointerMove = (event: PointerEvent) => {
+  if (!cornerEditMode.value || draggingCornerIndex.value === null) return;
+  const el = protoImageRef.value;
+  if (!el) return;
+
+  const rect = el.getBoundingClientRect();
+  const nextX = Math.min(Math.max(event.clientX - rect.left, 0), rect.width);
+  const nextY = Math.min(Math.max(event.clientY - rect.top, 0), rect.height);
+
+  editableCorners.value = editableCorners.value.map((p, index) =>
+    index === draggingCornerIndex.value ? { x: nextX, y: nextY } : p,
+  );
+};
+
+const handlePointerUp = () => {
+  draggingCornerIndex.value = null;
+};
+
 const exportImage = async () => {
-  if (!previewRef.value) return;
+  if (!previewRef.value || !currentModel.value) return;
 
   try {
     const dataUrl = await toPng(previewRef.value, {
       quality: 0.95,
-      // backgroundColor: '#ffffff',
-      pixelRatio: 2, // 导出2倍高清图片
+      pixelRatio: 2,
     });
 
     const link = document.createElement("a");
@@ -303,6 +365,18 @@ const exportImage = async () => {
     console.error("导出图片失败:", error);
   }
 };
+
+onMounted(() => {
+  window.addEventListener("resize", updateProtoSize);
+  window.addEventListener("pointermove", handlePointerMove);
+  window.addEventListener("pointerup", handlePointerUp);
+});
+
+onBeforeUnmount(() => {
+  window.removeEventListener("resize", updateProtoSize);
+  window.removeEventListener("pointermove", handlePointerMove);
+  window.removeEventListener("pointerup", handlePointerUp);
+});
 </script>
 
 <template>
@@ -310,7 +384,7 @@ const exportImage = async () => {
     <div class="p-4">
       <div class="flex gap-2 mb-6 items-center">
         <img src="/logo.svg" alt="logo" class="w-8 h-8 mt-1" />
-        <h1 class="text-2xl font-bold">MiBand Proto Forge</h1>
+        <h1 class="text-2xl font-bold">MiBand Proto Forge V2</h1>
       </div>
 
       <div class="flex flex-col lg:flex-row gap-4">
@@ -359,6 +433,7 @@ const exportImage = async () => {
                   </SelectContent>
                 </Select>
               </div>
+
               <Separator />
 
               <div class="space-y-2">
@@ -388,63 +463,96 @@ const exportImage = async () => {
                 </div>
               </div>
 
+              <Separator />
+
+              <div class="space-y-2">
+                <p class="text-sm font-medium">角点调试</p>
+                <div class="flex gap-2">
+                  <Button variant="outline" size="sm" @click="toggleCornerEdit">
+                    {{ cornerEditMode ? "关闭调试" : "编辑角点" }}
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    :disabled="!cornerEditMode"
+                    @click="resetEditableCorners"
+                  >
+                    重置角点
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    :disabled="effectiveCorners.length !== 4"
+                    @click="copyCornerConfig"
+                  >
+                    复制角点配置
+                  </Button>
+                </div>
+                <p class="text-xs text-gray-500">
+                  拖动预览中的4个控制点，复制后粘贴到模板 `screenCorners`。
+                </p>
+                <pre
+                  class="text-xs bg-gray-100 p-2 rounded-md overflow-auto max-h-40"
+                  >{{ editableCornersAsConfig }}</pre
+                >
+              </div>
+
               <div v-if="screenshotUrl" class="space-y-2">
-                <Button @click="exportImage" class="w-full">
-                  导出样机图片
-                </Button>
+                <Button @click="exportImage" class="w-full"
+                  >导出样机图片</Button
+                >
               </div>
             </CardContent>
           </Card>
         </div>
+
         <ScrollArea class="border rounded-md max-w-md whitespace-nowrap">
           <div>
             <Card class="w-md">
               <CardHeader>
                 <CardTitle>样机预览</CardTitle>
                 <CardDescription
-                  >{{ currentModel.deviceName }} 样机效果</CardDescription
+                  >{{
+                    currentModel?.deviceName || "设备"
+                  }}
+                  样机效果</CardDescription
                 >
               </CardHeader>
               <CardContent>
-                <div ref="previewRef" class="relative mx-auto">
-                  <div
-                    class="relative mx-auto"
-                    :style="{
-                      perspective: currentModel.perspective,
-                      perspectiveOrigin: currentModel.perspectiveOrigin,
-                    }"
-                  >
-                    <!-- 样机图片（背景层） -->
-                    <img
-                      v-if="currentProtoImage"
-                      :src="currentProtoImage"
-                      :alt="currentModel.deviceName + ' 样机'"
-                      class="inset-0 w-full h-full object-contain"
-                    />
+                <div ref="previewRef" class="relative mx-auto inline-block">
+                  <img
+                    v-if="currentProtoImage"
+                    ref="protoImageRef"
+                    :src="currentProtoImage"
+                    :alt="(currentModel?.deviceName || '设备') + ' 样机'"
+                    class="block max-w-full h-auto"
+                    @load="updateProtoSize"
+                  />
 
-                    <!-- 截图显示区域（前景层） -->
+                  <div class="absolute inset-0" v-if="currentModel">
                     <div
-                      class="absolute overflow-hidden"
+                      class="absolute left-0 top-0 overflow-hidden relative"
                       :style="{
-                        top: currentModel.top,
-                        left: currentModel.left,
-                        width: currentModel.width + 'px',
-                        height: currentModel.height + 'px',
+                        width: currentModel.screenSource.width + 'px',
+                        height: currentModel.screenSource.height + 'px',
                         borderRadius: currentModel.borderRadius,
-                        transform: `rotateX(${currentModel.rotation.rotateX}deg) rotateY(${currentModel.rotation.rotateY}deg) rotateZ(${currentModel.rotation.rotateZ}deg) scale(${currentModel.rotation.scale})`,
-                        transformStyle: 'preserve-3d',
+                        transform: warpMatrix,
+                        transformOrigin: '0 0',
                       }"
                     >
-                      <div v-if="screenshotUrl" class="w-full h-full">
+                      <div
+                        v-if="screenshotUrl"
+                        class="w-full h-full absolute inset-0 z-10"
+                      >
                         <img
                           :src="screenshotUrl"
                           :alt="currentModel.deviceName + ' 截图'"
-                          class="w-full h-full object-contain"
+                          class="w-full h-full object-cover"
                         />
                       </div>
                       <div
                         v-else
-                        class="bg-white w-full h-full flex items-center justify-center"
+                        class="bg-white w-full h-full flex items-center justify-center absolute inset-0 z-10"
                       >
                         <div class="text-center text-gray-400">
                           <svg
@@ -463,21 +571,48 @@ const exportImage = async () => {
                           <p>请上传截图</p>
                         </div>
                       </div>
-                      <!-- 白色渐变高光蒙版 -->
+
                       <div
-                        class="absolute inset-0 pointer-events-none"
+                        class="absolute inset-0 pointer-events-none z-20"
                         :style="{
                           borderRadius: currentModel.borderRadius,
                           background: currentModel.highlightGradient,
                         }"
                       ></div>
                     </div>
+
+                    <svg
+                      v-if="cornerEditMode && effectiveCorners.length === 4"
+                      class="absolute inset-0 w-full h-full"
+                    >
+                      <polygon
+                        :points="guidePolygonPoints"
+                        fill="rgba(59, 130, 246, 0.08)"
+                        stroke="rgba(59, 130, 246, 0.75)"
+                        stroke-width="2"
+                        stroke-dasharray="6 4"
+                      />
+                    </svg>
+
+                    <button
+                      v-if="cornerEditMode"
+                      v-for="(corner, index) in editableCorners"
+                      :key="index"
+                      type="button"
+                      class="absolute w-4 h-4 rounded-full bg-blue-500 border-2 border-white shadow -translate-x-1/2 -translate-y-1/2 cursor-move"
+                      :style="{
+                        left: corner.x + 'px',
+                        top: corner.y + 'px',
+                      }"
+                      @pointerdown="(e) => handleCornerPointerDown(index, e)"
+                    ></button>
                   </div>
                 </div>
 
-                <div class="mt-4 text-center">
+                <div class="mt-4 text-center" v-if="currentModel">
                   <p class="text-sm text-gray-600">
-                    {{ currentModel.width }} × {{ currentModel.height }} 像素
+                    源截图 {{ currentModel.screenSource.width }} ×
+                    {{ currentModel.screenSource.height }} 像素
                   </p>
                 </div>
               </CardContent>
