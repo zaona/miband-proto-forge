@@ -62,7 +62,7 @@ function solve(A: number[][], B: number[]): number[] {
 export function getPerspectiveTransform(
   w: number,
   h: number,
-  points: Point[]
+  points: Point[],
 ): string {
   const A: number[][] = [];
   const B: number[] = [];

@@ -87,7 +87,7 @@ interface ProtoTemplate {
       name: "模板一",
       imagePath: "/proto/new-1.png",
       watchFaceType: "跑道形",
-      borderRadius: "200px",
+      borderRadius: "106",
       highlightGradient:
         "linear-gradient(300deg, rgba(255,255,255,0.05) 0%, rgba(255,255,255,0.1) 50%, rgba(255,255,255,0.4) 100%)",
       screenSource: {

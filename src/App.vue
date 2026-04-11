@@ -31,7 +31,7 @@ interface ProtoTemplate {
   name: string;
   imagePath: string;
   watchFaceType: "圆形" | "方形" | "跑道形";
-  borderRadius: string;
+  borderRadius: number;
   highlightGradient: string;
   screenSource: {
     width: number;
@@ -48,6 +48,74 @@ interface DeviceModel {
 }
 
 const deviceModels: Record<string, DeviceModel> = {
+  "xiaomi-band-9": {
+    deviceName: "小米手环9",
+    category: "手环",
+    templates: [
+      {
+        id: "9-1",
+        name: "模板一",
+        imagePath: "/proto/9-1.png",
+        watchFaceType: "跑道形",
+        borderRadius: 96,
+        highlightGradient:
+          "linear-gradient(300deg, rgba(255,255,255,0.05) 0%, rgba(255,255,255,0.1) 50%, rgba(255,255,255,0.4) 100%)",
+        screenSource: {
+          width: 192,
+          height: 490,
+        },
+        screenCorners: [
+          {
+            x: 411,
+            y: 47,
+          },
+          {
+            x: 650,
+            y: 113,
+          },
+          {
+            x: 295,
+            y: 637,
+          },
+          {
+            x: 62,
+            y: 565,
+          },
+        ],
+      },
+      {
+        id: "9-2",
+        name: "模板二",
+        imagePath: "/proto/9-2.png",
+        watchFaceType: "跑道形",
+        borderRadius: 96,
+        highlightGradient:
+          "linear-gradient(300deg, rgba(255,255,255,0.05) 0%, rgba(255,255,255,0.1) 50%, rgba(255,255,255,0.4) 100%)",
+        screenSource: {
+          width: 192,
+          height: 490,
+        },
+        screenCorners: [
+          {
+            x: 386,
+            y: 68,
+          },
+          {
+            x: 661,
+            y: 107,
+          },
+          {
+            x: 339,
+            y: 735,
+          },
+          {
+            x: 48,
+            y: 723,
+          },
+        ],
+      },
+    ],
+  },
   "xiaomi-band-10": {
     deviceName: "小米手环10",
     category: "手环",
@@ -57,7 +125,7 @@ const deviceModels: Record<string, DeviceModel> = {
         name: "模板一",
         imagePath: "/proto/10-1.png",
         watchFaceType: "跑道形",
-        borderRadius: "200px",
+        borderRadius: 104,
         highlightGradient:
           "linear-gradient(300deg, rgba(255,255,255,0.05) 0%, rgba(255,255,255,0.1) 50%, rgba(255,255,255,0.4) 100%)",
         screenSource: {
@@ -83,6 +151,68 @@ const deviceModels: Record<string, DeviceModel> = {
           },
         ],
       },
+      {
+        id: "10-2",
+        name: "模板二",
+        imagePath: "/proto/10-2.png",
+        watchFaceType: "跑道形",
+        borderRadius: 104,
+        highlightGradient:
+          "linear-gradient(300deg, rgba(255,255,255,0.05) 0%, rgba(255,255,255,0.1) 50%, rgba(255,255,255,0.4) 100%)",
+        screenSource: {
+          width: 212,
+          height: 520,
+        },
+        screenCorners: [
+          {
+            x: 605,
+            y: 228,
+          },
+          {
+            x: 856,
+            y: 228,
+          },
+          {
+            x: 581,
+            y: 888,
+          },
+          {
+            x: 322,
+            y: 858,
+          },
+        ],
+      },
+      {
+        id: "10-3",
+        name: "模板三",
+        imagePath: "/proto/10-3.png",
+        watchFaceType: "跑道形",
+        borderRadius: 104,
+        highlightGradient:
+          "linear-gradient(300deg, rgba(255,255,255,0.05) 0%, rgba(255,255,255,0.1) 50%, rgba(255,255,255,0.4) 100%)",
+        screenSource: {
+          width: 212,
+          height: 520,
+        },
+        screenCorners: [
+          {
+            x: 331,
+            y: 125,
+          },
+          {
+            x: 584,
+            y: 79,
+          },
+          {
+            x: 367,
+            y: 697,
+          },
+          {
+            x: 112,
+            y: 715,
+          },
+        ],
+      },
     ],
   },
   "xiaomi-band-9p": {
@@ -94,7 +224,7 @@ const deviceModels: Record<string, DeviceModel> = {
         name: "模板一",
         imagePath: "/proto/9p-1.png",
         watchFaceType: "方形",
-        borderRadius: "48px",
+        borderRadius: 48,
         highlightGradient:
           "linear-gradient(325deg, rgba(255,255,255,0.05) 0%, rgba(255,255,255,0.1) 50%, rgba(255,255,255,0.4) 100%)",
         screenSource: {
@@ -103,20 +233,20 @@ const deviceModels: Record<string, DeviceModel> = {
         },
         screenCorners: [
           {
-            x: 326,
-            y: 75,
+            x: 319,
+            y: 78,
           },
           {
-            x: 605,
-            y: 203,
+            x: 608,
+            y: 212,
           },
           {
             x: 324,
             y: 696,
           },
           {
-            x: 51,
-            y: 557,
+            x: 48,
+            y: 550,
           },
         ],
       },
@@ -125,7 +255,7 @@ const deviceModels: Record<string, DeviceModel> = {
         name: "模板二",
         imagePath: "/proto/9p-2.png",
         watchFaceType: "方形",
-        borderRadius: "48px",
+        borderRadius: 48,
         highlightGradient:
           "linear-gradient(325deg, rgba(255,255,255,0.05) 0%, rgba(255,255,255,0.1) 50%, rgba(255,255,255,0.4) 100%)",
         screenSource: {
@@ -148,6 +278,210 @@ const deviceModels: Record<string, DeviceModel> = {
           {
             x: 66,
             y: 972,
+          },
+        ],
+      },
+    ],
+  },
+  "redmi-watch-5": {
+    deviceName: "红米手表5",
+    category: "手表",
+    templates: [
+      {
+        id: "r5-1",
+        name: "模板一",
+        imagePath: "/proto/r5-1.png",
+        watchFaceType: "方形",
+        borderRadius: 103,
+        highlightGradient:
+          "linear-gradient(280deg, rgba(255,255,255,0.05) 0%, rgba(255,255,255,0.1) 50%, rgba(255,255,255,0.2) 100%)",
+        screenSource: {
+          width: 432,
+          height: 514,
+        },
+        screenCorners: [
+          {
+            x: 333,
+            y: 269,
+          },
+          {
+            x: 758,
+            y: 342,
+          },
+          {
+            x: 809,
+            y: 810,
+          },
+          {
+            x: 355,
+            y: 764,
+          },
+        ],
+      },
+      {
+        id: "r5-2",
+        name: "模板二",
+        imagePath: "/proto/r5-2.png",
+        watchFaceType: "方形",
+        borderRadius: 103,
+        highlightGradient:
+          "linear-gradient(280deg, rgba(255,255,255,0.05) 0%, rgba(255,255,255,0.1) 50%, rgba(255,255,255,0.2) 100%)",
+        screenSource: {
+          width: 432,
+          height: 514,
+        },
+        screenCorners: [
+          {
+            x: 687,
+            y: 302,
+          },
+          {
+            x: 1106,
+            y: 323,
+          },
+          {
+            x: 1096,
+            y: 1007,
+          },
+          {
+            x: 681,
+            y: 1020,
+          },
+        ],
+      },
+    ],
+  },
+  "xiaomi-watch-s3": {
+    deviceName: "小米手表S3",
+    category: "手表",
+    templates: [
+      {
+        id: "s3-1",
+        name: "模板一",
+        imagePath: "/proto/s3-1.png",
+        watchFaceType: "圆形",
+        borderRadius: 240,
+        highlightGradient:
+          "linear-gradient(280deg, rgba(255,255,255,0.05) 0%, rgba(255,255,255,0.1) 50%, rgba(255,255,255,0.4) 100%)",
+        screenSource: {
+          width: 480,
+          height: 480,
+        },
+        screenCorners: [
+          {
+            x: 136,
+            y: 427,
+          },
+          {
+            x: 553,
+            y: 435,
+          },
+          {
+            x: 523,
+            y: 991,
+          },
+          {
+            x: 126,
+            y: 956,
+          },
+        ],
+      },
+      {
+        id: "s3-2",
+        name: "模板二",
+        imagePath: "/proto/s3-2.png",
+        watchFaceType: "圆形",
+        borderRadius: 240,
+        highlightGradient:
+          "linear-gradient(35deg, rgba(255,255,255,0.05) 0%, rgba(255,255,255,0.1) 50%, rgba(255,255,255,0.4) 100%)",
+        screenSource: {
+          width: 480,
+          height: 480,
+        },
+        screenCorners: [
+          {
+            x: 295,
+            y: 146,
+          },
+          {
+            x: 848,
+            y: 281,
+          },
+          {
+            x: 583,
+            y: 871,
+          },
+          {
+            x: 49,
+            y: 684,
+          },
+        ],
+      },
+    ],
+  },
+  "xiaomi-watch-s4": {
+    deviceName: "小米手表S4",
+    category: "手表",
+    templates: [
+      {
+        id: "s4-1",
+        name: "模板一",
+        imagePath: "/proto/s4-1.png",
+        watchFaceType: "圆形",
+        borderRadius: 240,
+        highlightGradient:
+          "linear-gradient(280deg, rgba(255,255,255,0.05) 0%, rgba(255,255,255,0.1) 50%, rgba(255,255,255,0.4) 100%)",
+        screenSource: {
+          width: 480,
+          height: 480,
+        },
+        screenCorners: [
+          {
+            x: 175,
+            y: 392,
+          },
+          {
+            x: 637,
+            y: 387,
+          },
+          {
+            x: 624,
+            y: 1018,
+          },
+          {
+            x: 159,
+            y: 970,
+          },
+        ],
+      },
+      {
+        id: "s4-2",
+        name: "模板二",
+        imagePath: "/proto/s4-2.png",
+        watchFaceType: "圆形",
+        borderRadius: 240,
+        highlightGradient:
+          "linear-gradient(280deg, rgba(255,255,255,0.05) 0%, rgba(255,255,255,0.1) 50%, rgba(255,255,255,0.4) 100%)",
+        screenSource: {
+          width: 480,
+          height: 480,
+        },
+        screenCorners: [
+          {
+            x: 130,
+            y: 350,
+          },
+          {
+            x: 620,
+            y: 360,
+          },
+          {
+            x: 583,
+            y: 994,
+          },
+          {
+            x: 130,
+            y: 946,
           },
         ],
       },
@@ -278,13 +612,38 @@ const effectiveCorners = computed<Point[]>(() => {
   return displayCornersFromConfig.value;
 });
 
-const warpMatrix = computed(() => {
+const scaledScreenSource = computed(() => {
   const model = currentModel.value;
-  if (!model || effectiveCorners.value.length !== 4) return "none";
+  if (!model) return { width: 1, height: 1 };
+
+  const scaleX = protoSize.value.renderWidth / protoSize.value.naturalWidth;
+  const scaleY = protoSize.value.renderHeight / protoSize.value.naturalHeight;
+
+  return {
+    width: model.screenSource.width * scaleX,
+    height: model.screenSource.height * scaleY,
+  };
+});
+
+const scaledBorderRadius = computed(() => {
+  const model = currentModel.value;
+  if (!model) return "0px";
+
+  const basePx = Number(model.borderRadius);
+  if (!Number.isFinite(basePx)) return "0px";
+  const scaleX = protoSize.value.renderWidth / protoSize.value.naturalWidth;
+  const scaleY = protoSize.value.renderHeight / protoSize.value.naturalHeight;
+  const scaledPx = basePx * ((scaleX + scaleY) / 2);
+
+  return `${scaledPx}px`;
+});
+
+const warpMatrix = computed(() => {
+  if (!currentModel.value || effectiveCorners.value.length !== 4) return "none";
 
   return getPerspectiveTransform(
-    model.screenSource.width,
-    model.screenSource.height,
+    scaledScreenSource.value.width,
+    scaledScreenSource.value.height,
     effectiveCorners.value,
   );
 });
@@ -533,9 +892,9 @@ onBeforeUnmount(() => {
                     <div
                       class="absolute left-0 top-0 overflow-hidden relative"
                       :style="{
-                        width: currentModel.screenSource.width + 'px',
-                        height: currentModel.screenSource.height + 'px',
-                        borderRadius: currentModel.borderRadius,
+                        width: scaledScreenSource.width + 'px',
+                        height: scaledScreenSource.height + 'px',
+                        borderRadius: scaledBorderRadius,
                         transform: warpMatrix,
                         transformOrigin: '0 0',
                       }"
@@ -568,14 +927,13 @@ onBeforeUnmount(() => {
                               d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
                             />
                           </svg>
-                          <p>请上传截图</p>
                         </div>
                       </div>
 
                       <div
                         class="absolute inset-0 pointer-events-none z-20"
                         :style="{
-                          borderRadius: currentModel.borderRadius,
+                          borderRadius: scaledBorderRadius,
                           background: currentModel.highlightGradient,
                         }"
                       ></div>
