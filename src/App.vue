@@ -20,6 +20,7 @@ import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 import { getPerspectiveTransform, type Point } from "@/lib/perspective";
+import { Github } from "lucide-vue-next";
 
 const selectedModel = ref("xiaomi-band-10");
 const selectedTemplate = ref("10-1");
@@ -782,9 +783,21 @@ onBeforeUnmount(() => {
 <template>
   <div class="min-h-screen bg-gray-50">
     <div class="p-4">
-      <div class="flex gap-2 mb-6 items-center">
-        <img src="/logo.svg" alt="logo" class="w-8 h-8 mt-1" />
-        <h1 class="text-2xl font-bold">米环样机生成器</h1>
+      <div class="mb-6 flex items-center justify-between gap-3">
+        <div class="flex items-center gap-2">
+          <img src="/logo.svg" alt="logo" class="h-8 w-8" />
+          <h1 class="text-2xl font-bold">米环样机生成器</h1>
+        </div>
+        <a
+          href="https://github.com/zaona/miband-proto-forge"
+          target="_blank"
+          rel="noopener noreferrer"
+          aria-label="GitHub 仓库"
+          class="rounded-md p-1.5 text-gray-600 transition-colors hover:bg-gray-100 hover:text-gray-900"
+        >
+          <Github class="h-5 w-5" />
+          <span class="sr-only">GitHub 仓库</span>
+        </a>
       </div>
 
       <div class="flex flex-col lg:flex-row gap-4">
