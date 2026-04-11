@@ -26,12 +26,14 @@ const selectedTemplate = ref("10-1");
 const screenshotFile = ref<File | null>(null);
 const screenshotUrl = ref<string>("");
 
+type CornerRadii = [number, number, number, number];
+
 interface ProtoTemplate {
   id: string;
   name: string;
   imagePath: string;
   watchFaceType: "圆形" | "方形" | "跑道形";
-  borderRadius: number;
+  borderRadius: number | CornerRadii;
   highlightGradient: string;
   screenSource: {
     width: number;
@@ -125,7 +127,7 @@ const deviceModels: Record<string, DeviceModel> = {
         name: "模板一",
         imagePath: "/proto/10-1.png",
         watchFaceType: "跑道形",
-        borderRadius: 104,
+        borderRadius: 106,
         highlightGradient:
           "linear-gradient(300deg, rgba(255,255,255,0.05) 0%, rgba(255,255,255,0.1) 50%, rgba(255,255,255,0.4) 100%)",
         screenSource: {
@@ -156,7 +158,7 @@ const deviceModels: Record<string, DeviceModel> = {
         name: "模板二",
         imagePath: "/proto/10-2.png",
         watchFaceType: "跑道形",
-        borderRadius: 104,
+        borderRadius: 106,
         highlightGradient:
           "linear-gradient(300deg, rgba(255,255,255,0.05) 0%, rgba(255,255,255,0.1) 50%, rgba(255,255,255,0.4) 100%)",
         screenSource: {
@@ -187,7 +189,7 @@ const deviceModels: Record<string, DeviceModel> = {
         name: "模板三",
         imagePath: "/proto/10-3.png",
         watchFaceType: "跑道形",
-        borderRadius: 104,
+        borderRadius: 106,
         highlightGradient:
           "linear-gradient(300deg, rgba(255,255,255,0.05) 0%, rgba(255,255,255,0.1) 50%, rgba(255,255,255,0.4) 100%)",
         screenSource: {
@@ -224,7 +226,7 @@ const deviceModels: Record<string, DeviceModel> = {
         name: "模板一",
         imagePath: "/proto/9p-1.png",
         watchFaceType: "方形",
-        borderRadius: 48,
+        borderRadius: [48, 38, 48, 38],
         highlightGradient:
           "linear-gradient(325deg, rgba(255,255,255,0.05) 0%, rgba(255,255,255,0.1) 50%, rgba(255,255,255,0.4) 100%)",
         screenSource: {
@@ -255,7 +257,7 @@ const deviceModels: Record<string, DeviceModel> = {
         name: "模板二",
         imagePath: "/proto/9p-2.png",
         watchFaceType: "方形",
-        borderRadius: 48,
+        borderRadius: [48, 38, 44, 48],
         highlightGradient:
           "linear-gradient(325deg, rgba(255,255,255,0.05) 0%, rgba(255,255,255,0.1) 50%, rgba(255,255,255,0.4) 100%)",
         screenSource: {
@@ -264,20 +266,20 @@ const deviceModels: Record<string, DeviceModel> = {
         },
         screenCorners: [
           {
-            x: 80,
-            y: 356,
+            x: 84,
+            y: 366,
           },
           {
-            x: 411,
-            y: 276,
+            x: 410,
+            y: 285,
           },
           {
             x: 407,
-            y: 920,
+            y: 914,
           },
           {
-            x: 66,
-            y: 972,
+            x: 68,
+            y: 964,
           },
         ],
       },
@@ -292,7 +294,7 @@ const deviceModels: Record<string, DeviceModel> = {
         name: "模板一",
         imagePath: "/proto/r5-1.png",
         watchFaceType: "方形",
-        borderRadius: 103,
+        borderRadius: [95, 103, 103, 103],
         highlightGradient:
           "linear-gradient(280deg, rgba(255,255,255,0.05) 0%, rgba(255,255,255,0.1) 50%, rgba(255,255,255,0.2) 100%)",
         screenSource: {
@@ -323,7 +325,7 @@ const deviceModels: Record<string, DeviceModel> = {
         name: "模板二",
         imagePath: "/proto/r5-2.png",
         watchFaceType: "方形",
-        borderRadius: 103,
+        borderRadius: [93, 103, 103, 103],
         highlightGradient:
           "linear-gradient(280deg, rgba(255,255,255,0.05) 0%, rgba(255,255,255,0.1) 50%, rgba(255,255,255,0.2) 100%)",
         screenSource: {
@@ -573,6 +575,39 @@ const updateProtoSize = () => {
 const cornerEditMode = ref(false);
 const editableCorners = ref<Point[]>([]);
 const draggingCornerIndex = ref<number | null>(null);
+const editableCornerRadii = ref<CornerRadii>([0, 0, 0, 0]);
+
+const normalizeCornerRadii = (
+  input: number | CornerRadii | undefined,
+): CornerRadii => {
+  if (Array.isArray(input) && input.length === 4) {
+    return [
+      Number.isFinite(input[0]) ? Math.max(0, input[0]) : 0,
+      Number.isFinite(input[1]) ? Math.max(0, input[1]) : 0,
+      Number.isFinite(input[2]) ? Math.max(0, input[2]) : 0,
+      Number.isFinite(input[3]) ? Math.max(0, input[3]) : 0,
+    ];
+  }
+
+  const value = Number(input);
+  if (!Number.isFinite(value)) return [0, 0, 0, 0];
+  const safe = Math.max(0, value);
+  return [safe, safe, safe, safe];
+};
+
+const syncEditableCornerRadii = () => {
+  editableCornerRadii.value = normalizeCornerRadii(
+    currentModel.value?.borderRadius,
+  );
+};
+
+const setCornerRadius = (index: number, rawValue: string) => {
+  const parsed = Number(rawValue);
+  const next = Number.isFinite(parsed) ? Math.max(0, parsed) : 0;
+  editableCornerRadii.value = editableCornerRadii.value.map((item, i) =>
+    i === index ? next : item,
+  ) as CornerRadii;
+};
 
 const displayCornersFromConfig = computed<Point[]>(() => {
   const model = currentModel.value;
@@ -605,6 +640,14 @@ watch(
   { immediate: true },
 );
 
+watch(
+  currentModel,
+  () => {
+    syncEditableCornerRadii();
+  },
+  { immediate: true },
+);
+
 const effectiveCorners = computed<Point[]>(() => {
   if (cornerEditMode.value && editableCorners.value.length === 4) {
     return editableCorners.value;
@@ -626,16 +669,14 @@ const scaledScreenSource = computed(() => {
 });
 
 const scaledBorderRadius = computed(() => {
-  const model = currentModel.value;
-  if (!model) return "0px";
-
-  const basePx = Number(model.borderRadius);
-  if (!Number.isFinite(basePx)) return "0px";
   const scaleX = protoSize.value.renderWidth / protoSize.value.naturalWidth;
   const scaleY = protoSize.value.renderHeight / protoSize.value.naturalHeight;
-  const scaledPx = basePx * ((scaleX + scaleY) / 2);
+  const scale = (scaleX + scaleY) / 2;
+  const [tl, tr, br, bl] = editableCornerRadii.value.map(
+    (radius) => radius * scale,
+  ) as CornerRadii;
 
-  return `${scaledPx}px`;
+  return `${tl}px ${tr}px ${br}px ${bl}px`;
 });
 
 const warpMatrix = computed(() => {
@@ -743,7 +784,7 @@ onBeforeUnmount(() => {
     <div class="p-4">
       <div class="flex gap-2 mb-6 items-center">
         <img src="/logo.svg" alt="logo" class="w-8 h-8 mt-1" />
-        <h1 class="text-2xl font-bold">MiBand Proto Forge V2</h1>
+        <h1 class="text-2xl font-bold">米环样机生成器</h1>
       </div>
 
       <div class="flex flex-col lg:flex-row gap-4">
@@ -824,6 +865,65 @@ onBeforeUnmount(() => {
 
               <Separator />
 
+              <div class="space-y-2" v-if="currentModel">
+                <p class="text-sm font-medium">圆角设置（TL / TR / BR / BL）</p>
+                <div class="grid grid-cols-2 gap-2">
+                  <div class="space-y-1">
+                    <label class="text-xs text-gray-500">TL</label>
+                    <Input
+                      type="number"
+                      min="0"
+                      step="1"
+                      :model-value="String(editableCornerRadii[0])"
+                      @update:model-value="
+                        (v) => setCornerRadius(0, String(v ?? '0'))
+                      "
+                    />
+                  </div>
+                  <div class="space-y-1">
+                    <label class="text-xs text-gray-500">TR</label>
+                    <Input
+                      type="number"
+                      min="0"
+                      step="1"
+                      :model-value="String(editableCornerRadii[1])"
+                      @update:model-value="
+                        (v) => setCornerRadius(1, String(v ?? '0'))
+                      "
+                    />
+                  </div>
+                  <div class="space-y-1">
+                    <label class="text-xs text-gray-500">BR</label>
+                    <Input
+                      type="number"
+                      min="0"
+                      step="1"
+                      :model-value="String(editableCornerRadii[2])"
+                      @update:model-value="
+                        (v) => setCornerRadius(2, String(v ?? '0'))
+                      "
+                    />
+                  </div>
+                  <div class="space-y-1">
+                    <label class="text-xs text-gray-500">BL</label>
+                    <Input
+                      type="number"
+                      min="0"
+                      step="1"
+                      :model-value="String(editableCornerRadii[3])"
+                      @update:model-value="
+                        (v) => setCornerRadius(3, String(v ?? '0'))
+                      "
+                    />
+                  </div>
+                </div>
+                <p class="text-xs text-gray-500">
+                  配置格式示例：`borderRadius: [{{ editableCornerRadii.join(", ") }}]`
+                </p>
+              </div>
+
+              <Separator />
+
               <div class="space-y-2">
                 <p class="text-sm font-medium">角点调试</p>
                 <div class="flex gap-2">
@@ -865,7 +965,7 @@ onBeforeUnmount(() => {
           </Card>
         </div>
 
-        <ScrollArea class="border rounded-md max-w-md whitespace-nowrap">
+        <ScrollArea class="rounded-md max-w-md whitespace-nowrap">
           <div>
             <Card class="w-md">
               <CardHeader>
