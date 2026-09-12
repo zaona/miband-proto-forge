@@ -17,7 +17,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
-import { Separator } from "@/components/ui/separator";
+import { Switch } from "@/components/ui/switch";
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 import { getPerspectiveTransform, type Point } from "@/lib/perspective";
 import { Github } from "lucide-vue-next";
@@ -26,6 +26,7 @@ const selectedModel = ref("xiaomi-band-10");
 const selectedTemplate = ref("10-1");
 const screenshotFile = ref<File | null>(null);
 const screenshotUrl = ref<string>("");
+const showScreenReflection = ref(true);
 
 type CornerRadii = [number, number, number, number];
 
@@ -213,6 +214,43 @@ const deviceModels: Record<string, DeviceModel> = {
           {
             x: 112,
             y: 715,
+          },
+        ],
+      },
+    ],
+  },
+  "xiaomi-band-11": {
+    deviceName: "小米手环11",
+    category: "手环",
+    templates: [
+      {
+        id: "11-1",
+        name: "模板一",
+        imagePath: "/proto/11-1.png",
+        watchFaceType: "跑道形",
+        borderRadius: 106,
+        highlightGradient:
+          "linear-gradient(300deg, rgba(255,255,255,0.05) 0%, rgba(255,255,255,0.1) 50%, rgba(255,255,255,0.4) 100%)",
+        screenSource: {
+          width: 212,
+          height: 520,
+        },
+        screenCorners: [
+          {
+            x: 166,
+            y: 204,
+          },
+          {
+            x: 415,
+            y: 182,
+          },
+          {
+            x: 273,
+            y: 951,
+          },
+          {
+            x: 27,
+            y: 942,
           },
         ],
       },
@@ -847,8 +885,6 @@ onBeforeUnmount(() => {
                 </Select>
               </div>
 
-              <Separator />
-
               <div class="space-y-2">
                 <label class="text-sm font-medium">手环截图</label>
                 <Input
@@ -876,7 +912,20 @@ onBeforeUnmount(() => {
                 </div>
               </div>
 
-              <Separator />
+              <div class="flex items-center justify-between gap-3">
+                <div class="space-y-0.5">
+                  <label for="screen-reflection" class="text-sm font-medium"
+                    >屏幕反光</label
+                  >
+                  <p class="text-xs text-gray-500">
+                    关闭后预览与导出不再叠加屏幕高光
+                  </p>
+                </div>
+                <Switch
+                  id="screen-reflection"
+                  v-model="showScreenReflection"
+                />
+              </div>
 
               <div class="space-y-2" v-if="currentModel">
                 <p class="text-sm font-medium">圆角设置（TL / TR / BR / BL）</p>
@@ -934,8 +983,6 @@ onBeforeUnmount(() => {
                   配置格式示例：`borderRadius: [{{ editableCornerRadii.join(", ") }}]`
                 </p>
               </div>
-
-              <Separator />
 
               <div class="space-y-2">
                 <p class="text-sm font-medium">角点调试</p>
@@ -1044,6 +1091,7 @@ onBeforeUnmount(() => {
                       </div>
 
                       <div
+                        v-if="showScreenReflection"
                         class="absolute inset-0 pointer-events-none z-20"
                         :style="{
                           borderRadius: scaledBorderRadius,
