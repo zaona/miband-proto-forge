@@ -1,14 +1,15 @@
 <script setup lang="ts">
-import type { HTMLAttributes } from 'vue'
-import { reactiveOmit } from '@vueuse/core'
-import { GripVertical } from 'lucide-vue-next'
-import { SplitterResizeHandle, type SplitterResizeHandleEmits, type SplitterResizeHandleProps, useForwardPropsEmits } from 'reka-ui'
-import { cn } from '@/lib/utils'
+import type { SplitterResizeHandleEmits, SplitterResizeHandleProps } from "reka-ui"
+import type { HTMLAttributes } from "vue"
+import { GripVertical } from "@lucide/vue"
+import { reactiveOmit } from "@vueuse/core"
+import { SplitterResizeHandle, useForwardPropsEmits } from "reka-ui"
+import { cn } from "@/lib/utils"
 
-const props = defineProps<SplitterResizeHandleProps & { class?: HTMLAttributes['class'], withHandle?: boolean }>()
+const props = defineProps<SplitterResizeHandleProps & { class?: HTMLAttributes["class"], withHandle?: boolean }>()
 const emits = defineEmits<SplitterResizeHandleEmits>()
 
-const delegatedProps = reactiveOmit(props, 'class', 'withHandle')
+const delegatedProps = reactiveOmit(props, "class", "withHandle")
 const forwarded = useForwardPropsEmits(delegatedProps, emits)
 </script>
 
@@ -20,7 +21,9 @@ const forwarded = useForwardPropsEmits(delegatedProps, emits)
   >
     <template v-if="props.withHandle">
       <div class="bg-border z-10 flex h-4 w-3 items-center justify-center rounded-xs border">
-        <GripVertical class="size-2.5" />
+        <slot>
+          <GripVertical class="size-2.5" />
+        </slot>
       </div>
     </template>
   </SplitterResizeHandle>
