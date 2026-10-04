@@ -62,7 +62,7 @@ const deviceModels: Record<string, DeviceModel> = {
         watchFaceType: "跑道形",
         borderRadius: 96,
         highlightGradient:
-          "linear-gradient(300deg, rgba(255,255,255,0.05) 0%, rgba(255,255,255,0.1) 50%, rgba(255,255,255,0.4) 100%)",
+          "linear-gradient(275deg, rgba(255,255,255,0.05) 0%, rgba(255,255,255,0.1) 50%, rgba(255,255,255,0.4) 100%)",
         screenSource: {
           width: 192,
           height: 490,
@@ -93,7 +93,7 @@ const deviceModels: Record<string, DeviceModel> = {
         watchFaceType: "跑道形",
         borderRadius: 96,
         highlightGradient:
-          "linear-gradient(300deg, rgba(255,255,255,0.05) 0%, rgba(255,255,255,0.1) 50%, rgba(255,255,255,0.4) 100%)",
+          "linear-gradient(260deg, rgba(255,255,255,0.04) 0%, rgba(255,255,255,0.08) 50%, rgba(255,255,255,0.3) 100%)",
         screenSource: {
           width: 192,
           height: 490,
@@ -130,7 +130,7 @@ const deviceModels: Record<string, DeviceModel> = {
         watchFaceType: "跑道形",
         borderRadius: 106,
         highlightGradient:
-          "linear-gradient(300deg, rgba(255,255,255,0.05) 0%, rgba(255,255,255,0.1) 50%, rgba(255,255,255,0.4) 100%)",
+          "linear-gradient(280deg, rgba(255,255,255,0.04) 0%, rgba(255,255,255,0.08) 50%, rgba(255,255,255,0.3) 100%)",
         screenSource: {
           width: 212,
           height: 520,
@@ -161,7 +161,7 @@ const deviceModels: Record<string, DeviceModel> = {
         watchFaceType: "跑道形",
         borderRadius: 106,
         highlightGradient:
-          "linear-gradient(300deg, rgba(255,255,255,0.05) 0%, rgba(255,255,255,0.1) 50%, rgba(255,255,255,0.4) 100%)",
+          "linear-gradient(290deg, rgba(255,255,255,0.05) 0%, rgba(255,255,255,0.1) 50%, rgba(255,255,255,0.4) 100%)",
         screenSource: {
           width: 212,
           height: 520,
@@ -229,7 +229,7 @@ const deviceModels: Record<string, DeviceModel> = {
         watchFaceType: "跑道形",
         borderRadius: 106,
         highlightGradient:
-          "linear-gradient(300deg, rgba(255,255,255,0.05) 0%, rgba(255,255,255,0.1) 50%, rgba(255,255,255,0.4) 100%)",
+          "linear-gradient(290deg, rgba(255,255,255,0.04) 0%, rgba(255,255,255,0.08) 50%, rgba(255,255,255,0.3) 100%)",
         screenSource: {
           width: 212,
           height: 520,
@@ -264,29 +264,29 @@ const deviceModels: Record<string, DeviceModel> = {
         name: "模板一",
         imagePath: "/proto/9p-1.png",
         watchFaceType: "方形",
-        borderRadius: [48, 38, 48, 38],
+        borderRadius: [48, 44, 44, 47],
         highlightGradient:
-          "linear-gradient(325deg, rgba(255,255,255,0.05) 0%, rgba(255,255,255,0.1) 50%, rgba(255,255,255,0.4) 100%)",
+          "linear-gradient(270deg, rgba(255,255,255,0.06) 0%, rgba(255,255,255,0.16) 50%, rgba(255,255,255,0.22) 100%)",
         screenSource: {
           width: 336,
           height: 480,
         },
         screenCorners: [
           {
-            x: 319,
-            y: 78,
+            x: 323,
+            y: 68,
           },
           {
-            x: 608,
-            y: 212,
+            x: 612,
+            y: 199,
           },
           {
-            x: 324,
-            y: 696,
+            x: 321,
+            y: 707,
           },
           {
-            x: 48,
-            y: 550,
+            x: 39,
+            y: 563,
           },
         ],
       },
@@ -295,29 +295,29 @@ const deviceModels: Record<string, DeviceModel> = {
         name: "模板二",
         imagePath: "/proto/9p-2.png",
         watchFaceType: "方形",
-        borderRadius: [48, 38, 44, 48],
+        borderRadius: 48,
         highlightGradient:
-          "linear-gradient(325deg, rgba(255,255,255,0.05) 0%, rgba(255,255,255,0.1) 50%, rgba(255,255,255,0.4) 100%)",
+          "linear-gradient(340deg, rgba(255,255,255,0.03) 0%, rgba(255,255,255,0.06) 50%, rgba(255,255,255,0.2) 100%)",
         screenSource: {
           width: 336,
           height: 480,
         },
         screenCorners: [
           {
-            x: 84,
-            y: 366,
+            x: 82,
+            y: 362,
           },
           {
-            x: 410,
-            y: 285,
+            x: 417,
+            y: 281,
           },
           {
-            x: 407,
-            y: 914,
+            x: 413,
+            y: 917,
           },
           {
-            x: 68,
-            y: 964,
+            x: 67,
+            y: 966,
           },
         ],
       },
@@ -334,7 +334,7 @@ const deviceModels: Record<string, DeviceModel> = {
         watchFaceType: "方形",
         borderRadius: [54, 44, 44, 48],
         highlightGradient:
-          "linear-gradient(325deg, rgba(255,255,255,0.05) 0%, rgba(255,255,255,0.1) 50%, rgba(255,255,255,0.4) 100%)",
+          "linear-gradient(305deg, rgba(255,255,255,0.04) 0%, rgba(255,255,255,0.08) 50%, rgba(255,255,255,0.3) 100%)",
         screenSource: {
           width: 336,
           height: 480,
@@ -365,7 +365,7 @@ const deviceModels: Record<string, DeviceModel> = {
         watchFaceType: "方形",
         borderRadius: [54, 44, 44, 48],
         highlightGradient:
-          "linear-gradient(325deg, rgba(255,255,255,0.05) 0%, rgba(255,255,255,0.1) 50%, rgba(255,255,255,0.4) 100%)",
+          "linear-gradient(305deg, rgba(255,255,255,0.04) 0%, rgba(255,255,255,0.08) 50%, rgba(255,255,255,0.3) 100%)",
         screenSource: {
           width: 336,
           height: 480,
@@ -402,7 +402,7 @@ const deviceModels: Record<string, DeviceModel> = {
         watchFaceType: "方形",
         borderRadius: [95, 103, 103, 103],
         highlightGradient:
-          "linear-gradient(280deg, rgba(255,255,255,0.05) 0%, rgba(255,255,255,0.1) 50%, rgba(255,255,255,0.2) 100%)",
+          "linear-gradient(335deg, rgba(255,255,255,0.03) 0%, rgba(255,255,255,0.06) 50%, rgba(255,255,255,0.2) 100%)",
         screenSource: {
           width: 432,
           height: 514,
@@ -433,7 +433,7 @@ const deviceModels: Record<string, DeviceModel> = {
         watchFaceType: "方形",
         borderRadius: [93, 103, 103, 103],
         highlightGradient:
-          "linear-gradient(280deg, rgba(255,255,255,0.05) 0%, rgba(255,255,255,0.1) 50%, rgba(255,255,255,0.2) 100%)",
+          "linear-gradient(290deg, rgba(255,255,255,0.04) 0%, rgba(255,255,255,0.08) 50%, rgba(255,255,255,0.3) 100%)",
         screenSource: {
           width: 432,
           height: 514,
@@ -470,7 +470,7 @@ const deviceModels: Record<string, DeviceModel> = {
         watchFaceType: "圆形",
         borderRadius: 240,
         highlightGradient:
-          "linear-gradient(280deg, rgba(255,255,255,0.05) 0%, rgba(255,255,255,0.1) 50%, rgba(255,255,255,0.4) 100%)",
+          "linear-gradient(10deg, rgba(255,255,255,0.03) 0%, rgba(255,255,255,0.06) 50%, rgba(255,255,255,0.2) 100%)",
         screenSource: {
           width: 480,
           height: 480,
@@ -501,7 +501,7 @@ const deviceModels: Record<string, DeviceModel> = {
         watchFaceType: "圆形",
         borderRadius: 240,
         highlightGradient:
-          "linear-gradient(35deg, rgba(255,255,255,0.05) 0%, rgba(255,255,255,0.1) 50%, rgba(255,255,255,0.4) 100%)",
+          "linear-gradient(295deg, rgba(255,255,255,0.05) 0%, rgba(255,255,255,0.1) 50%, rgba(255,255,255,0.4) 100%)",
         screenSource: {
           width: 480,
           height: 480,
@@ -538,7 +538,7 @@ const deviceModels: Record<string, DeviceModel> = {
         watchFaceType: "圆形",
         borderRadius: 240,
         highlightGradient:
-          "linear-gradient(280deg, rgba(255,255,255,0.05) 0%, rgba(255,255,255,0.1) 50%, rgba(255,255,255,0.4) 100%)",
+          "linear-gradient(305deg, rgba(255,255,255,0.05) 0%, rgba(255,255,255,0.1) 50%, rgba(255,255,255,0.4) 100%)",
         screenSource: {
           width: 480,
           height: 480,
@@ -569,7 +569,7 @@ const deviceModels: Record<string, DeviceModel> = {
         watchFaceType: "圆形",
         borderRadius: 240,
         highlightGradient:
-          "linear-gradient(280deg, rgba(255,255,255,0.05) 0%, rgba(255,255,255,0.1) 50%, rgba(255,255,255,0.4) 100%)",
+          "linear-gradient(305deg, rgba(255,255,255,0.05) 0%, rgba(255,255,255,0.1) 50%, rgba(255,255,255,0.4) 100%)",
         screenSource: {
           width: 480,
           height: 480,
