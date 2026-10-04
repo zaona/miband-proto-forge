@@ -323,6 +323,74 @@ const deviceModels: Record<string, DeviceModel> = {
       },
     ],
   },
+  "xiaomi-band-10p": {
+    deviceName: "小米手环10Pro",
+    category: "手环",
+    templates: [
+      {
+        id: "10p-1",
+        name: "模板一",
+        imagePath: "/proto/10p-1.png",
+        watchFaceType: "方形",
+        borderRadius: [51, 44, 44, 48],
+        highlightGradient:
+          "linear-gradient(325deg, rgba(255,255,255,0.05) 0%, rgba(255,255,255,0.1) 50%, rgba(255,255,255,0.4) 100%)",
+        screenSource: {
+          width: 336,
+          height: 480,
+        },
+        screenCorners: [
+          {
+            x: 158,
+            y: 134,
+          },
+          {
+            x: 371,
+            y: 118,
+          },
+          {
+            x: 302,
+            y: 516,
+          },
+          {
+            x: 86,
+            y: 511,
+          },
+        ],
+      },
+      {
+        id: "10p-2",
+        name: "模板二",
+        imagePath: "/proto/10p-2.png",
+        watchFaceType: "方形",
+        borderRadius: [51, 44, 44, 48],
+        highlightGradient:
+          "linear-gradient(325deg, rgba(255,255,255,0.05) 0%, rgba(255,255,255,0.1) 50%, rgba(255,255,255,0.4) 100%)",
+        screenSource: {
+          width: 336,
+          height: 480,
+        },
+        screenCorners: [
+          {
+            x: 158,
+            y: 134,
+          },
+          {
+            x: 371,
+            y: 118,
+          },
+          {
+            x: 302,
+            y: 516,
+          },
+          {
+            x: 86,
+            y: 511,
+          },
+        ],
+      },
+    ],
+  },
   "redmi-watch-5": {
     deviceName: "红米手表5",
     category: "手表",
