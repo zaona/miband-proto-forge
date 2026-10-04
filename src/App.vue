@@ -400,7 +400,7 @@ const deviceModels: Record<string, DeviceModel> = {
         name: "模板一",
         imagePath: "/proto/r5-1.png",
         watchFaceType: "方形",
-        borderRadius: [95, 103, 103, 103],
+        borderRadius: [74, 83, 74, 82],
         highlightGradient:
           "linear-gradient(335deg, rgba(255,255,255,0.03) 0%, rgba(255,255,255,0.06) 50%, rgba(255,255,255,0.2) 100%)",
         screenSource: {
@@ -409,20 +409,20 @@ const deviceModels: Record<string, DeviceModel> = {
         },
         screenCorners: [
           {
-            x: 333,
-            y: 269,
+            x: 327,
+            y: 264,
           },
           {
             x: 758,
-            y: 342,
+            y: 339,
           },
           {
-            x: 809,
-            y: 810,
+            x: 813,
+            y: 819,
           },
           {
-            x: 355,
-            y: 764,
+            x: 351,
+            y: 773,
           },
         ],
       },
@@ -431,7 +431,7 @@ const deviceModels: Record<string, DeviceModel> = {
         name: "模板二",
         imagePath: "/proto/r5-2.png",
         watchFaceType: "方形",
-        borderRadius: [93, 103, 103, 103],
+        borderRadius: [82, 88, 88, 82],
         highlightGradient:
           "linear-gradient(290deg, rgba(255,255,255,0.04) 0%, rgba(255,255,255,0.08) 50%, rgba(255,255,255,0.3) 100%)",
         screenSource: {
@@ -440,20 +440,20 @@ const deviceModels: Record<string, DeviceModel> = {
         },
         screenCorners: [
           {
-            x: 687,
-            y: 302,
+            x: 664,
+            y: 289,
           },
           {
-            x: 1106,
-            y: 323,
+            x: 1116,
+            y: 308,
           },
           {
-            x: 1096,
-            y: 1007,
+            x: 1116,
+            y: 1014,
           },
           {
-            x: 681,
-            y: 1020,
+            x: 664,
+            y: 1029,
           },
         ],
       },
