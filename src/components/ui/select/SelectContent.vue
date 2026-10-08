@@ -19,8 +19,9 @@ const props = withDefaults(
   defineProps<SelectContentProps & { class?: HTMLAttributes["class"] }>(),
   {
     position: "popper",
+    bodyLock: false,
   },
-)
+);
 const emits = defineEmits<SelectContentEmits>()
 
 const delegatedProps = reactiveOmit(props, "class")
