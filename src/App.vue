@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed, watch, onMounted, onBeforeUnmount } from "vue";
+import { ref, computed, watch, nextTick, onMounted, onBeforeUnmount } from "vue";
 import { toPng } from "html-to-image";
 import {
   Card,
@@ -18,11 +18,74 @@ import {
 } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
-import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 import { getPerspectiveTransform, type Point } from "@/lib/perspective";
+import ImageLoading from "@/components/ImageLoading.vue";
 
-const selectedModel = ref("xiaomi-band-10");
-const selectedTemplate = ref("10-1");
+const imageRequests = new Set<AbortController>();
+const imageUrls = new Set<string>();
+
+const releaseImage = (url: string) => {
+  if (imageUrls.delete(url)) URL.revokeObjectURL(url);
+};
+
+const loadImage = async (
+  src: string,
+  onProgress: (value: number | null) => void,
+  controller = new AbortController(),
+): Promise<HTMLImageElement> => {
+  const xhr = new XMLHttpRequest();
+  const abort = () => xhr.abort();
+  imageRequests.add(controller);
+  controller.signal.addEventListener("abort", abort);
+  let url = "";
+
+  try {
+    const blob = await new Promise<Blob>((resolve, reject) => {
+      xhr.open("GET", src);
+      xhr.responseType = "blob";
+      xhr.onprogress = (event) => onProgress(
+        event.lengthComputable && event.total > 0
+          ? Math.min(100, (event.loaded / event.total) * 100)
+          : null,
+      );
+
+      xhr.onload = () => {
+        if (xhr.status >= 200 && xhr.status < 300) {
+          onProgress(100);
+          resolve(xhr.response);
+        } else {
+          reject(new Error("图片加载失败"));
+        }
+      };
+      xhr.onerror = () => reject(new Error("图片加载失败"));
+      xhr.onabort = () => reject(new DOMException("请求已取消", "AbortError"));
+      xhr.send();
+    });
+
+    url = URL.createObjectURL(blob);
+    const image = new Image();
+    image.src = url;
+    await image.decode();
+
+    if (controller.signal.aborted) {
+      throw new DOMException("请求已取消", "AbortError");
+    }
+
+    imageUrls.add(url);
+    return image;
+  } catch (error) {
+    if (url) URL.revokeObjectURL(url);
+    throw error;
+  } finally {
+    imageRequests.delete(controller);
+    controller.signal.removeEventListener("abort", abort);
+  }
+};
+
+const screenTypes = ["圆形", "方形", "跑道形"] as const;
+const selectedScreenType = ref<ProtoTemplate["watchFaceType"]>("圆形");
+const selectedModel = ref("");
+const selectedTemplate = ref("");
 const screenshotFile = ref<File | null>(null);
 const screenshotUrl = ref<string>("");
 const showScreenReflection = ref(true);
@@ -597,42 +660,68 @@ const deviceModels: Record<string, DeviceModel> = {
   },
 };
 
-watch(selectedModel, (newModel) => {
-  const device = deviceModels[newModel];
-  if (device?.templates.length) {
-    selectedTemplate.value = device.templates[0].id;
-  }
-});
-
-const deviceList = computed(() => {
-  return Object.entries(deviceModels)
-    .map(([key, model]) => ({
-      value: key,
-      deviceName: model.deviceName,
-      category: model.category,
+const deviceList = computed(() =>
+  Object.entries(deviceModels)
+    .filter(([, device]) =>
+      device.templates.some((t) => t.watchFaceType === selectedScreenType.value),
+    )
+    .map(([value, device]) => ({
+      value,
+      deviceName: device.deviceName,
+      category: device.category,
     }))
-    .sort((a, b) => {
-      if (a.category !== b.category) {
-        return a.category.localeCompare(b.category);
-      }
-      return a.deviceName.localeCompare(b.deviceName);
-    });
-});
+    .sort((a, b) =>
+      Number(a.category !== "手表") - Number(b.category !== "手表") ||
+      Number(b.deviceName.match(/\d+/)?.[0] ?? 0) -
+        Number(a.deviceName.match(/\d+/)?.[0] ?? 0) ||
+      b.deviceName.localeCompare(a.deviceName, "zh-CN", { numeric: true }),
+    ),
+);
+
+const currentTemplates = computed(() =>
+  (deviceModels[selectedModel.value]?.templates ?? []).filter(
+    (t) => t.watchFaceType === selectedScreenType.value,
+  ),
+);
+
+watch(
+  selectedScreenType,
+  () => {
+    selectedModel.value = deviceList.value[0]?.value ?? "";
+  },
+  { immediate: true },
+);
+
+watch(
+  currentTemplates,
+  (templates) => {
+    selectedTemplate.value = templates[0]?.id ?? "";
+  },
+  { immediate: true },
+);
 
 const currentModel = computed(() => {
   const device = deviceModels[selectedModel.value];
-  const template =
-    device?.templates.find((t) => t.id === selectedTemplate.value) ||
-    device?.templates[0];
+  const template = currentTemplates.value.find(
+    (t) => t.id === selectedTemplate.value,
+  ) ?? currentTemplates.value[0];
 
   if (!device || !template) return null;
-  return {
-    ...template,
-    deviceName: device.deviceName,
-  };
+  return { ...template, deviceName: device.deviceName };
 });
 
-const currentProtoImage = computed(() => currentModel.value?.imagePath || "");
+const previewModel = ref<
+  (ProtoTemplate & {
+    deviceName: string;
+    imageWidth: number;
+    imageHeight: number;
+  }) | null
+>(null);
+
+const previewReady = ref(false);
+let previewLoadId = 0;
+
+const currentProtoImage = computed(() => previewModel.value?.imagePath || "");
 
 const handleFileUpload = (event: Event) => {
   const target = event.target as HTMLInputElement;
@@ -669,19 +758,52 @@ const protoSize = ref({
 
 const updateProtoSize = () => {
   const el = protoImageRef.value;
-  if (!el) return;
+  const model = previewModel.value;
+  if (!el || !model) return;
+
   protoSize.value = {
-    naturalWidth: el.naturalWidth || 1,
-    naturalHeight: el.naturalHeight || 1,
+    naturalWidth: model.imageWidth,
+    naturalHeight: model.imageHeight,
     renderWidth: el.clientWidth || 1,
     renderHeight: el.clientHeight || 1,
   };
 };
 
 const cornerEditMode = ref(false);
+const showCornerGuide = ref(true);
+const showCornerDetails = ref(false);
+const cornerLabels = ["TL", "TR", "BR", "BL"] as const;
+const cornerAxes = ["x", "y"] as const;
+const showCornerRadiusSettings = ref(false);
 const editableCorners = ref<Point[]>([]);
 const draggingCornerIndex = ref<number | null>(null);
+let cornerDrag: {
+  pointerId: number;
+  offsetX: number;
+  offsetY: number;
+} | null = null;
 const editableCornerRadii = ref<CornerRadii>([0, 0, 0, 0]);
+type TemplateProgress = {
+  radii?: CornerRadii;
+  corners?: Point[];
+};
+
+const templateProgress = new Map<string, TemplateProgress>();
+
+const progressKey = computed(() => {
+  const model = previewModel.value;
+  return model ? JSON.stringify([model.deviceName, model.id]) : "";
+});
+
+const saveProgress = (changes: TemplateProgress) => {
+  const key = progressKey.value;
+  if (!key || debugUnavailable.value) return;
+
+  templateProgress.set(key, {
+    ...templateProgress.get(key),
+    ...changes,
+  });
+};
 
 const normalizeCornerRadii = (
   input: number | CornerRadii | undefined,
@@ -703,20 +825,138 @@ const normalizeCornerRadii = (
 
 const syncEditableCornerRadii = () => {
   editableCornerRadii.value = normalizeCornerRadii(
-    currentModel.value?.borderRadius,
+    templateProgress.get(progressKey.value)?.radii ??
+      previewModel.value?.borderRadius,
   );
 };
 
+const resetEditableCornerRadii = () => {
+  if (debugUnavailable.value) return;
+
+  const saved = templateProgress.get(progressKey.value);
+  if (saved) delete saved.radii;
+  syncEditableCornerRadii();
+};
+
+const templatePreviewSize = { width: 96, height: 112 };
+const templateImageSizes = ref<Record<string, {
+  width: number;
+  height: number;
+}>>({});
+
+const templateImages = ref<Record<string, {
+  url: string;
+  progress: number | null;
+  error: boolean;
+}>>({});
+
+const previewImage = computed(() =>
+  templateImages.value[currentModel.value?.imagePath ?? ""],
+);
+
+const previewLoading = computed(() =>
+  !!currentModel.value &&
+  !previewImage.value?.error &&
+  (!previewImage.value?.url || !previewReady.value),
+);
+
+const previewLoadError = computed(() =>
+  previewImage.value?.error ? "模板加载失败，请重试" : "",
+);
+
+const previewProgress = computed(() =>
+  previewImage.value?.progress ?? null,
+);
+
+const debugUnavailable = computed(() => {
+  const selected = currentModel.value;
+  const shown = previewModel.value;
+
+  return (
+    previewLoading.value ||
+    !!previewLoadError.value ||
+    !selected ||
+    !shown ||
+    selected.id !== shown.id ||
+    selected.deviceName !== shown.deviceName
+  );
+});
+
+const debugHint = computed(() => {
+  if (previewLoadError.value) {
+    return "模板加载失败，暂时无法调整，请尝试重新加载";
+  }
+  return debugUnavailable.value ? "模板加载中，暂时无法调整，请耐心等待" : "";
+});
+
+watch(debugUnavailable, (disabled) => {
+  if (disabled) {
+    cornerDrag = null;
+    draggingCornerIndex.value = null;
+  }
+}, { flush: "sync" });
+
+const loadTemplateImage = async (template: ProtoTemplate) => {
+  const path = template.imagePath;
+  if (templateImages.value[path] && !templateImages.value[path].error) return;
+
+  templateImages.value[path] = { url: "", progress: 0, error: false };
+  const state = templateImages.value[path];
+
+  try {
+    const image = await loadImage(path, value => state.progress = value);
+    templateImageSizes.value[path] = {
+      width: image.naturalWidth,
+      height: image.naturalHeight,
+    };
+    state.url = image.src;
+  } catch {
+    state.error = true;
+  }
+};
+
+watch(currentTemplates, templates => {
+  templates.forEach(loadTemplateImage);
+}, { immediate: true });
+
+const getTemplateMaskStyle = (template: ProtoTemplate) => {
+  const size = templateImageSizes.value[template.imagePath];
+  if (!size?.width || !size.height) return { display: "none" };
+
+  const scale = Math.min(
+    templatePreviewSize.width / size.width,
+    templatePreviewSize.height / size.height,
+  );
+  const { width, height } = template.screenSource;
+
+  return {
+    left: (templatePreviewSize.width - size.width * scale) / 2 + "px",
+    top: (templatePreviewSize.height - size.height * scale) / 2 + "px",
+    width: width + "px",
+    height: height + "px",
+    borderRadius: normalizeCornerRadii(template.borderRadius)
+      .map((radius) => radius + "px").join(" "),
+    transform: `scale(${scale}) ${getPerspectiveTransform(width, height, template.screenCorners)}`,
+    transformOrigin: "0 0",
+    boxShadow: `0 0 0 ${0.75 / scale}px #000`,
+  };
+};
+
 const setCornerRadius = (index: number, rawValue: string) => {
+  if (!showCornerRadiusSettings.value || debugUnavailable.value) return;
+
   const parsed = Number(rawValue);
   const next = Number.isFinite(parsed) ? Math.max(0, parsed) : 0;
+
   editableCornerRadii.value = editableCornerRadii.value.map((item, i) =>
     i === index ? next : item,
   ) as CornerRadii;
+
+  saveProgress({ radii: [...editableCornerRadii.value] as CornerRadii });
 };
 
 const displayCornersFromConfig = computed<Point[]>(() => {
-  const model = currentModel.value;
+  const model = previewModel.value;
   if (!model) return [];
 
   const scaleX = protoSize.value.renderWidth / protoSize.value.naturalWidth;
@@ -729,26 +969,25 @@ const displayCornersFromConfig = computed<Point[]>(() => {
 });
 
 const syncEditableCorners = () => {
-  editableCorners.value = displayCornersFromConfig.value.map((p) => ({ ...p }));
+  const corners =
+    templateProgress.get(progressKey.value)?.corners ??
+    previewModel.value?.screenCorners ??
+    [];
+
+  const scaleX = protoSize.value.renderWidth / protoSize.value.naturalWidth;
+  const scaleY = protoSize.value.renderHeight / protoSize.value.naturalHeight;
+
+  editableCorners.value = corners.map((p) => ({
+    x: p.x * scaleX,
+    y: p.y * scaleY,
+  }));
 };
 
 watch(
-  [
-    currentModel,
-    () => protoSize.value.renderWidth,
-    () => protoSize.value.renderHeight,
-  ],
+  [previewModel, protoSize],
   () => {
-    if (!cornerEditMode.value) {
-      syncEditableCorners();
-    }
-  },
-  { immediate: true },
-);
-
-watch(
-  currentModel,
-  () => {
+    draggingCornerIndex.value = null;
+    syncEditableCorners();
     syncEditableCornerRadii();
   },
   { immediate: true },
@@ -762,7 +1001,7 @@ const effectiveCorners = computed<Point[]>(() => {
 });
 
 const scaledScreenSource = computed(() => {
-  const model = currentModel.value;
+  const model = previewModel.value;
   if (!model) return { width: 1, height: 1 };
 
   const scaleX = protoSize.value.renderWidth / protoSize.value.naturalWidth;
@@ -778,7 +1017,11 @@ const scaledBorderRadius = computed(() => {
   const scaleX = protoSize.value.renderWidth / protoSize.value.naturalWidth;
   const scaleY = protoSize.value.renderHeight / protoSize.value.naturalHeight;
   const scale = (scaleX + scaleY) / 2;
-  const [tl, tr, br, bl] = editableCornerRadii.value.map(
+  const radii = showCornerRadiusSettings.value
+    ? editableCornerRadii.value
+    : normalizeCornerRadii(previewModel.value?.borderRadius);
+
+  const [tl, tr, br, bl] = radii.map(
     (radius) => radius * scale,
   ) as CornerRadii;
 
@@ -786,7 +1029,7 @@ const scaledBorderRadius = computed(() => {
 });
 
 const warpMatrix = computed(() => {
-  if (!currentModel.value || effectiveCorners.value.length !== 4) return "none";
+  if (!previewModel.value || effectiveCorners.value.length !== 4) return "none";
 
   return getPerspectiveTransform(
     scaledScreenSource.value.width,
@@ -799,30 +1042,152 @@ const guidePolygonPoints = computed(() => {
   return effectiveCorners.value.map((p) => `${p.x},${p.y}`).join(" ");
 });
 
-const editableCornersAsConfig = computed(() => {
-  if (effectiveCorners.value.length !== 4) return "[]";
+const cornerCoordinates = computed<Point[]>(() => {
+  if (effectiveCorners.value.length !== 4) return [];
 
   const scaleX = protoSize.value.naturalWidth / protoSize.value.renderWidth;
   const scaleY = protoSize.value.naturalHeight / protoSize.value.renderHeight;
 
-  const corners = effectiveCorners.value.map((p) => ({
+  return effectiveCorners.value.map((p) => ({
     x: Math.round(p.x * scaleX),
     y: Math.round(p.y * scaleY),
   }));
-
-  return JSON.stringify(corners, null, 2);
 });
 
-const toggleCornerEdit = () => {
-  cornerEditMode.value = !cornerEditMode.value;
+const editableCornersAsConfig = computed(() =>
+  JSON.stringify(cornerCoordinates.value, null, 2),
+);
+
+const saveEditableCorners = () => {
+  const scaleX = protoSize.value.naturalWidth / protoSize.value.renderWidth;
+  const scaleY = protoSize.value.naturalHeight / protoSize.value.renderHeight;
+
+  saveProgress({
+    corners: editableCorners.value.map((p) => ({
+      x: p.x * scaleX,
+      y: p.y * scaleY,
+    })),
+  });
+};
+
+const setCornerCoordinate = (
+  index: number,
+  axis: "x" | "y",
+  input: string,
+) => {
+  if (!cornerEditMode.value || debugUnavailable.value) return;
+  if (input.trim() === "") return;
+
+  const value = Number(input);
+  const point = editableCorners.value[index];
+  if (!point || !Number.isFinite(value)) return;
+
+  const { naturalWidth, naturalHeight, renderWidth, renderHeight } =
+    protoSize.value;
+  const sourceSize = axis === "x" ? naturalWidth : naturalHeight;
+  const renderSize = axis === "x" ? renderWidth : renderHeight;
+
+  point[axis] =
+    (Math.min(Math.max(Math.round(value), 0), sourceSize) * renderSize) /
+    sourceSize;
+
+  saveEditableCorners();
+};
+
+const numberStepDirections = [-1, 1] as const;
+// Chromium SpinButtonElement 使用 ScrollbarTheme 默认时序：250ms / 50ms。
+const numberStepTiming = { delay: 250, interval: 50 };
+let numberStepDelay: number | undefined;
+let numberStepRepeat: number | undefined;
+let numberStepPress: {
+  button: HTMLButtonElement;
+  input: HTMLInputElement;
+  pointerId: number;
+  initialValue: string;
+} | null = null;
+
+const stopNumberStep = () => {
+  window.clearTimeout(numberStepDelay);
+  window.clearInterval(numberStepRepeat);
+  numberStepDelay = numberStepRepeat = undefined;
+  const press = numberStepPress;
+  numberStepPress = null;
+  if (!press) return;
+  if (press.button.hasPointerCapture(press.pointerId)) {
+    press.button.releasePointerCapture(press.pointerId);
+  }
+  if (press.input.value !== press.initialValue) {
+    press.input.dispatchEvent(new Event("change", { bubbles: true }));
+  }
+};
+
+const stepNumberInput = (button: HTMLButtonElement, direction: -1 | 1) => {
+  const input = button.parentElement?.querySelector("input");
+  if (!button.isConnected || !input || input.matches(":disabled") || input.readOnly || debugUnavailable.value) {
+    return false;
+  }
+  const previous = input.value;
+  if (direction > 0) input.stepUp();
+  else input.stepDown();
+  if (input.value !== previous) {
+    input.dispatchEvent(new Event("input", { bubbles: true }));
+    if (!numberStepPress) input.dispatchEvent(new Event("change", { bubbles: true }));
+  }
+  return true;
+};
+
+const startNumberStep = (direction: -1 | 1, event: PointerEvent) => {
+  if (!event.isPrimary || event.button !== 0 || debugUnavailable.value) return;
+  event.preventDefault();
+  stopNumberStep();
+  const button = event.currentTarget as HTMLButtonElement;
+  const input = button.parentElement?.querySelector("input");
+  if (!input || input.matches(":disabled") || input.readOnly) return;
+  input.focus({ preventScroll: true });
+  input.select();
+  numberStepPress = { button, input, pointerId: event.pointerId, initialValue: input.value };
+  button.setPointerCapture(event.pointerId);
+  const step = () => {
+    if (!stepNumberInput(button, direction)) stopNumberStep();
+  };
+  numberStepDelay = window.setTimeout(() => {
+    numberStepRepeat = window.setInterval(step, numberStepTiming.interval);
+    step();
+  }, numberStepTiming.delay);
+  step();
+};
+
+const handleNumberStepMove = (event: PointerEvent) => {
+  const press = numberStepPress;
+  if (!press || press.pointerId !== event.pointerId) return;
+  const rect = press.button.getBoundingClientRect();
+  if (event.clientX < rect.left || event.clientX > rect.right || event.clientY < rect.top || event.clientY > rect.bottom) {
+    stopNumberStep();
+  }
+};
+
+watch([showCornerRadiusSettings, cornerEditMode, debugUnavailable, currentModel], stopNumberStep, { flush: "sync" });
+
+const toggleCornerEdit = (enabled: boolean) => {
+  if (debugUnavailable.value) return;
+
+  cornerEditMode.value = enabled;
+  draggingCornerIndex.value = null;
   syncEditableCorners();
 };
 
 const resetEditableCorners = () => {
+  if (debugUnavailable.value) return;
+
+  const saved = templateProgress.get(progressKey.value);
+  if (saved) delete saved.corners;
+  draggingCornerIndex.value = null;
   syncEditableCorners();
 };
 
 const copyCornerConfig = async () => {
+  if (debugUnavailable.value) return;
+
   try {
     await navigator.clipboard.writeText(editableCornersAsConfig.value);
   } catch (err) {
@@ -831,31 +1196,80 @@ const copyCornerConfig = async () => {
 };
 
 const handleCornerPointerDown = (index: number, event: PointerEvent) => {
-  if (!cornerEditMode.value) return;
+  if (!cornerEditMode.value || debugUnavailable.value || cornerDrag) return;
+  if (!event.isPrimary || event.button !== 0) return;
+
+  const image = protoImageRef.value;
+  const point = editableCorners.value[index];
+  if (!image || !point) return;
+
+  event.preventDefault();
+
+  const rect = image.getBoundingClientRect();
+  cornerDrag = {
+    pointerId: event.pointerId,
+    offsetX: event.clientX - rect.left - point.x,
+    offsetY: event.clientY - rect.top - point.y,
+  };
+
   draggingCornerIndex.value = index;
-  (event.target as HTMLElement).setPointerCapture?.(event.pointerId);
+  (event.currentTarget as HTMLButtonElement).setPointerCapture(event.pointerId);
 };
 
 const handlePointerMove = (event: PointerEvent) => {
-  if (!cornerEditMode.value || draggingCornerIndex.value === null) return;
-  const el = protoImageRef.value;
-  if (!el) return;
+  const index = draggingCornerIndex.value;
+  if (!cornerEditMode.value || debugUnavailable.value || index === null) return;
+  if (!cornerDrag || event.pointerId !== cornerDrag.pointerId) return;
 
-  const rect = el.getBoundingClientRect();
-  const nextX = Math.min(Math.max(event.clientX - rect.left, 0), rect.width);
-  const nextY = Math.min(Math.max(event.clientY - rect.top, 0), rect.height);
+  const image = protoImageRef.value;
+  if (!image) return;
 
-  editableCorners.value = editableCorners.value.map((p, index) =>
-    index === draggingCornerIndex.value ? { x: nextX, y: nextY } : p,
-  );
+  const rect = image.getBoundingClientRect();
+  editableCorners.value[index] = {
+    x: Math.min(
+      Math.max(event.clientX - rect.left - cornerDrag.offsetX, 0),
+      rect.width,
+    ),
+    y: Math.min(
+      Math.max(event.clientY - rect.top - cornerDrag.offsetY, 0),
+      rect.height,
+    ),
+  };
+
+  saveEditableCorners();
 };
 
-const handlePointerUp = () => {
+const handlePointerUp = (event: PointerEvent) => {
+  if (!cornerDrag || event.pointerId !== cornerDrag.pointerId) return;
+
+  cornerDrag = null;
   draggingCornerIndex.value = null;
 };
 
+const formatExportTime = (date = new Date()) =>
+  [
+    date.getFullYear(),
+    date.getMonth() + 1,
+    date.getDate(),
+    date.getHours(),
+    date.getMinutes(),
+    date.getSeconds(),
+  ]
+    .map((value) => String(value).padStart(2, "0"))
+    .join("");
+
 const exportImage = async () => {
-  if (!previewRef.value || !currentModel.value) return;
+  const model = previewModel.value;
+
+  if (
+    !previewRef.value ||
+    !model ||
+    previewLoading.value ||
+    previewLoadError.value
+  ) return;
+
+  const filename =
+    `${model.deviceName}_${model.name}_${formatExportTime()}.png`;
 
   try {
     const dataUrl = await toPng(previewRef.value, {
@@ -864,7 +1278,7 @@ const exportImage = async () => {
     });
 
     const link = document.createElement("a");
-    link.download = `${currentModel.value.deviceName}-样机-${Date.now()}.png`;
+    link.download = filename;
     link.href = dataUrl;
     link.click();
   } catch (error) {
@@ -872,16 +1286,75 @@ const exportImage = async () => {
   }
 };
 
+const loadPreviewModel = (model: typeof currentModel.value) => {
+  if (model) void loadTemplateImage(model);
+};
+
+watch(currentModel, loadPreviewModel, { immediate: true });
+
+watch(
+  [currentModel, () => previewImage.value?.url],
+  async ([model, url]) => {
+    const loadId = ++previewLoadId;
+    previewReady.value = false;
+
+    if (!model) {
+      previewModel.value = null;
+      return;
+    }
+    if (!url) return;
+
+    const size = templateImageSizes.value[model.imagePath];
+    if (!size) return;
+
+    previewModel.value = {
+      ...model,
+      imagePath: url,
+      imageWidth: size.width,
+      imageHeight: size.height,
+    };
+
+    try {
+      await nextTick();
+      if (loadId !== previewLoadId) return;
+
+      const image = protoImageRef.value;
+      if (!image) return;
+      if (!image.complete || !image.naturalWidth) await image.decode();
+
+      if (loadId !== previewLoadId) return;
+      updateProtoSize();
+      await nextTick();
+      if (loadId === previewLoadId) previewReady.value = true;
+    } catch {
+      if (loadId !== previewLoadId) return;
+      const state = templateImages.value[model.imagePath];
+      if (state) state.error = true;
+    }
+  },
+  { immediate: true },
+);
+
 onMounted(() => {
+  window.addEventListener("blur", stopNumberStep);
+  document.addEventListener("visibilitychange", stopNumberStep);
   window.addEventListener("resize", updateProtoSize);
   window.addEventListener("pointermove", handlePointerMove);
   window.addEventListener("pointerup", handlePointerUp);
+  window.addEventListener("pointercancel", handlePointerUp);
 });
 
 onBeforeUnmount(() => {
+  stopNumberStep();
+  window.removeEventListener("blur", stopNumberStep);
+  document.removeEventListener("visibilitychange", stopNumberStep);
+  ++previewLoadId;
+  imageRequests.forEach(controller => controller.abort());
+  imageUrls.forEach(releaseImage);
   window.removeEventListener("resize", updateProtoSize);
   window.removeEventListener("pointermove", handlePointerMove);
   window.removeEventListener("pointerup", handlePointerUp);
+  window.removeEventListener("pointercancel", handlePointerUp);
 });
 </script>
 
@@ -915,18 +1388,32 @@ onBeforeUnmount(() => {
       </div>
 
       <div class="flex flex-col lg:flex-row gap-4">
-        <div class="w-full">
+        <div class="w-full min-w-0 lg:flex-1">
           <Card>
             <CardHeader>
               <CardTitle>配置选项</CardTitle>
-              <CardDescription>选择手环型号并上传截图</CardDescription>
+              <CardDescription>选择设备型号并上传截图</CardDescription>
             </CardHeader>
             <CardContent class="space-y-6">
               <div class="flex flex-col gap-2">
-                <label class="text-sm font-medium">手环型号</label>
-                <Select v-model="selectedModel">
+                <label class="text-sm font-medium">屏幕类型</label>
+                <Select v-model="selectedScreenType">
                   <SelectTrigger>
-                    <SelectValue placeholder="选择手环型号" />
+                    <SelectValue placeholder="选择屏幕类型" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem v-for="type in screenTypes" :key="type" :value="type">
+                      {{ type === "跑道形" ? "跑道型" : type }}
+                    </SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div class="flex flex-col gap-2">
+                <label class="text-sm font-medium">设备名称</label>
+                <Select :key="selectedScreenType" v-model="selectedModel">
+                  <SelectTrigger :disabled="!deviceList.length">
+                    <SelectValue placeholder="选择设备名称" />
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem
@@ -940,29 +1427,55 @@ onBeforeUnmount(() => {
                 </Select>
               </div>
 
-              <div
-                class="flex flex-col gap-2"
-                v-if="deviceModels[selectedModel]?.templates.length > 1"
-              >
-                <label class="text-sm font-medium">样机模板</label>
-                <Select v-model="selectedTemplate">
-                  <SelectTrigger>
-                    <SelectValue placeholder="选择样机模板" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem
-                      v-for="template in deviceModels[selectedModel]?.templates"
-                      :key="template.id"
-                      :value="template.id"
+              <div v-if="currentTemplates.length" class="flex flex-col gap-2">
+                <label class="text-sm font-medium">模板</label>
+                <div class="flex flex-wrap gap-2">
+                  <button
+                    v-for="template in currentTemplates"
+                    :key="template.id"
+                    type="button"
+                    :aria-pressed="selectedTemplate === template.id"
+                    class="w-28 shrink-0 rounded-lg border-2 p-1.5 text-sm transition-colors focus-visible:outline-2 focus-visible:outline-blue-500"
+                    :class="selectedTemplate === template.id
+                      ? 'border-blue-500 text-blue-600'
+                      : 'border-gray-200 text-gray-700 hover:border-gray-400'"
+                    @click="selectedTemplate = template.id; loadTemplateImage(template)"
+                  >
+                    <div
+                      class="relative mx-auto overflow-hidden"
+                      :style="{
+                        width: templatePreviewSize.width + 'px',
+                        height: templatePreviewSize.height + 'px',
+                      }"
                     >
-                      {{ template.name }}
-                    </SelectItem>
-                  </SelectContent>
-                </Select>
+                      <img
+                        v-if="templateImages[template.imagePath]?.url"
+                        :src="templateImages[template.imagePath]?.url"
+                                            :alt="template.name"
+                        class="block h-full w-full object-contain"
+                      />
+                      <div
+                        v-if="templateImages[template.imagePath]?.url"
+                        aria-hidden="true"
+                        class="pointer-events-none absolute bg-black"
+                        :style="getTemplateMaskStyle(template)"
+                      ></div>
+                      <ImageLoading
+                        v-else
+                        class="absolute inset-0 justify-center"
+                        :progress="templateImages[template.imagePath]?.progress ?? null"
+                        :error="templateImages[template.imagePath]?.error ?? false"
+                      />
+                    </div>
+                    <span class="flex h-6 items-center justify-center">
+                      <span class="truncate">{{ template.name }}</span>
+                    </span>
+                  </button>
+                </div>
               </div>
 
               <div class="flex flex-col gap-2">
-                <label class="text-sm font-medium">手环截图</label>
+                <label class="text-sm font-medium">屏幕截图</label>
                 <Input
                   id="screenshot-upload"
                   type="file"
@@ -970,7 +1483,7 @@ onBeforeUnmount(() => {
                   @change="handleFileUpload"
                 />
                 <p class="text-xs text-gray-500">
-                  支持 JPG、PNG、WEBP 格式图片
+                  支持 JPG、PNG、WEBP、SVG 等格式图片
                 </p>
               </div>
 
@@ -1003,145 +1516,251 @@ onBeforeUnmount(() => {
                 />
               </div>
 
-              <div class="flex flex-col gap-2" v-if="currentModel">
-                <p class="text-sm font-medium">圆角设置（TL / TR / BR / BL）</p>
-                <div class="grid grid-cols-2 gap-2">
-                  <div class="flex flex-col gap-2">
-                    <label class="text-xs text-gray-500">TL</label>
-                    <Input
-                      type="number"
-                      min="0"
-                      step="1"
-                      :model-value="String(editableCornerRadii[0])"
-                      @update:model-value="
-                        (v) => setCornerRadius(0, String(v ?? '0'))
-                      "
-                    />
+              <fieldset
+                v-if="currentModel"
+                :disabled="debugUnavailable"
+                class="m-0 min-w-0 space-y-6 border-0 p-0"
+              >
+              <div class="space-y-3">
+                <div class="flex items-center justify-between gap-3">
+                  <div class="space-y-0.5">
+                    <label for="corner-radius-settings" class="text-sm font-medium">
+                      圆角设置
+                    </label>
+                    <p class="text-xs text-gray-500">
+                      {{ debugHint || "手动调整屏幕四个角的圆角大小" }}
+                    </p>
                   </div>
-                  <div class="flex flex-col gap-2">
-                    <label class="text-xs text-gray-500">TR</label>
-                    <Input
-                      type="number"
-                      min="0"
-                      step="1"
-                      :model-value="String(editableCornerRadii[1])"
-                      @update:model-value="
-                        (v) => setCornerRadius(1, String(v ?? '0'))
-                      "
-                    />
-                  </div>
-                  <div class="flex flex-col gap-2">
-                    <label class="text-xs text-gray-500">BR</label>
-                    <Input
-                      type="number"
-                      min="0"
-                      step="1"
-                      :model-value="String(editableCornerRadii[2])"
-                      @update:model-value="
-                        (v) => setCornerRadius(2, String(v ?? '0'))
-                      "
-                    />
-                  </div>
-                  <div class="flex flex-col gap-2">
-                    <label class="text-xs text-gray-500">BL</label>
-                    <Input
-                      type="number"
-                      min="0"
-                      step="1"
-                      :model-value="String(editableCornerRadii[3])"
-                      @update:model-value="
-                        (v) => setCornerRadius(3, String(v ?? '0'))
-                      "
-                    />
-                  </div>
+                  <Switch
+                    id="corner-radius-settings"
+                    :disabled="debugUnavailable"
+                    v-model="showCornerRadiusSettings"
+                  />
                 </div>
-                <p class="text-xs text-gray-500">
-                  配置格式示例：`borderRadius: [{{ editableCornerRadii.join(", ") }}]`
-                </p>
+
+                <div v-if="showCornerRadiusSettings" class="space-y-2">
+                  <Button variant="outline" size="sm" @click="resetEditableCornerRadii">
+                    重置圆角
+                  </Button>
+                  <div class="grid grid-cols-2 gap-2">
+                    <div
+                      v-for="(label, index) in ['TL', 'TR', 'BR', 'BL']"
+                      :key="label"
+                      class="flex flex-col gap-2"
+                    >
+                      <label :for="'radius-' + label" class="text-xs text-gray-500">
+                        {{ label }}
+                      </label>
+                      <div class="number-stepper relative min-w-0">
+                        <Input
+                          :id="'radius-' + label"
+                          class="number-stepper-input"
+                          type="number"
+                          min="0"
+                          step="1"
+                          :model-value="String(editableCornerRadii[index])"
+                          @update:model-value="
+                            (v) => setCornerRadius(index, String(v ?? '0'))
+                          "
+                        />
+                        <button
+                          v-for="direction in numberStepDirections"
+                          :key="direction"
+                          type="button"
+                          tabindex="-1"
+                          class="number-stepper-button"
+                          :class="direction < 0 ? 'number-stepper-minus' : 'number-stepper-plus'"
+                          :aria-label="`${label} 圆角${direction < 0 ? '减' : '加'} 1`"
+                          :disabled="direction < 0 && editableCornerRadii[index] <= 0"
+                          @pointerdown="(event) => startNumberStep(direction, event)"
+                          @pointermove="handleNumberStepMove"
+                          @pointerup="stopNumberStep"
+                          @pointercancel="stopNumberStep"
+                          @lostpointercapture="stopNumberStep"
+                          @contextmenu.prevent
+                          @click="(event) => event.detail === 0 && stepNumberInput(event.currentTarget as HTMLButtonElement, direction)"
+                        >{{ direction < 0 ? '−' : '+' }}</button>
+                      </div>
+                    </div>
+                  </div>
+
+                  <p class="text-xs text-gray-500">
+                    配置格式示例：`borderRadius: [{{ editableCornerRadii.join(", ") }}]`
+                  </p>
+                </div>
               </div>
 
-              <div class="flex flex-col gap-2">
-                <p class="text-sm font-medium">角点调试</p>
-                <div class="flex gap-2">
-                  <Button variant="outline" size="sm" @click="toggleCornerEdit">
-                    {{ cornerEditMode ? "关闭调试" : "编辑角点" }}
-                  </Button>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    :disabled="!cornerEditMode"
-                    @click="resetEditableCorners"
-                  >
-                    重置角点
-                  </Button>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    :disabled="effectiveCorners.length !== 4"
-                    @click="copyCornerConfig"
-                  >
-                    复制角点配置
-                  </Button>
+              <div class="space-y-3">
+                <div class="flex items-center justify-between gap-3">
+                  <div class="space-y-0.5">
+                    <label for="corner-debug" class="text-sm font-medium">
+                      角点调试
+                    </label>
+                    <p class="text-xs text-gray-500">
+                      {{ debugHint || "拖动预览中的4个控制点，复制后粘贴到模板 screenCorners" }}
+                    </p>
+                  </div>
+                  <Switch
+                    id="corner-debug"
+                    :disabled="debugUnavailable"
+                    :model-value="cornerEditMode"
+                    @update:model-value="toggleCornerEdit"
+                  />
                 </div>
-                <p class="text-xs text-gray-500">
-                  拖动预览中的4个控制点，复制后粘贴到模板 `screenCorners`。
-                </p>
-                <pre
-                  class="text-xs bg-gray-100 p-2 rounded-md overflow-auto max-h-40"
-                  >{{ editableCornersAsConfig }}</pre
-                >
+
+                <div v-if="cornerEditMode" class="space-y-3">
+                  <div class="flex flex-wrap gap-2">
+                    <Button variant="outline" size="sm" @click="resetEditableCorners">
+                      重置角点
+                    </Button>
+
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      @click="showCornerGuide = !showCornerGuide"
+                    >
+                      {{ showCornerGuide ? "隐藏蚂蚁线" : "显示蚂蚁线" }}
+                    </Button>
+
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      :aria-expanded="showCornerDetails"
+                      @click="showCornerDetails = !showCornerDetails"
+                    >
+                      {{ showCornerDetails ? "隐藏详细配置" : "显示详细配置" }}
+                    </Button>
+
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      :disabled="effectiveCorners.length !== 4"
+                      @click="copyCornerConfig"
+                    >
+                      复制角点配置
+                    </Button>
+                  </div>
+
+                  <div class="grid grid-cols-2 gap-2">
+                    <div
+                      v-for="(corner, index) in cornerCoordinates"
+                      :key="index"
+                      class="min-w-0 space-y-2 rounded-lg border bg-gray-50 p-2"
+                    >
+                      <div class="text-xs font-medium text-gray-600">
+                        {{ cornerLabels[index] }}
+                      </div>
+
+                      <div class="grid grid-cols-2 gap-2">
+                        <div
+                          v-for="axis in cornerAxes"
+                          :key="axis"
+                          class="number-stepper relative min-w-0"
+                        >
+                          <Input
+                            class="number-stepper-input corner-coordinate-input min-w-0"
+                            type="number"
+                            min="0"
+                            step="1"
+                            :max="axis === 'x' ? protoSize.naturalWidth : protoSize.naturalHeight"
+                            :model-value="corner[axis]"
+                            :aria-label="`${cornerLabels[index]} ${axis.toUpperCase()} 坐标`"
+                            @update:model-value="
+                              (value) => setCornerCoordinate(index, axis, String(value ?? ''))
+                            "
+                          />
+                          <button
+                            v-for="direction in numberStepDirections"
+                            :key="direction"
+                            type="button"
+                            tabindex="-1"
+                            class="number-stepper-button"
+                            :class="direction < 0 ? 'number-stepper-minus' : 'number-stepper-plus'"
+                            :aria-label="`${cornerLabels[index]} ${axis.toUpperCase()} 坐标${direction < 0 ? '减' : '加'} 1`"
+                            :disabled="direction < 0 ? corner[axis] <= 0 : corner[axis] >= (axis === 'x' ? protoSize.naturalWidth : protoSize.naturalHeight)"
+                            @pointerdown="(event) => startNumberStep(direction, event)"
+                            @pointermove="handleNumberStepMove"
+                            @pointerup="stopNumberStep"
+                            @pointercancel="stopNumberStep"
+                            @lostpointercapture="stopNumberStep"
+                            @contextmenu.prevent
+                            @click="(event) => event.detail === 0 && stepNumberInput(event.currentTarget as HTMLButtonElement, direction)"
+                          >{{ direction < 0 ? '−' : '+' }}</button>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <pre
+                    v-if="showCornerDetails"
+                    class="max-h-40 overflow-auto rounded-md bg-gray-100 p-2 text-xs"
+                  >{{ editableCornersAsConfig }}</pre>
+                </div>
               </div>
+              </fieldset>
 
               <div v-if="screenshotUrl" class="space-y-2">
-                <Button @click="exportImage" class="w-full"
-                  >导出样机图片</Button
+                <Button
+                  @click="exportImage"
+                  class="w-full"
+                  :disabled="previewLoading || !!previewLoadError || !previewModel"
                 >
+                  导出 {{ previewModel?.deviceName || "设备" }} 图片
+                </Button>
               </div>
             </CardContent>
           </Card>
         </div>
 
-        <ScrollArea class="rounded-md max-w-md whitespace-nowrap">
-          <div>
-            <Card class="w-md">
+        <div class="w-full min-w-0 lg:w-md lg:shrink-0">
+          <Card class="w-full">
               <CardHeader>
-                <CardTitle>样机预览</CardTitle>
+                <CardTitle>预览</CardTitle>
                 <CardDescription
                   >{{
-                    currentModel?.deviceName || "设备"
+                    previewModel?.deviceName || "设备"
                   }}
-                  样机效果</CardDescription
+                  效果预览</CardDescription
                 >
               </CardHeader>
               <CardContent>
-                <div ref="previewRef" class="relative mx-auto inline-block">
+                <div
+                  ref="previewRef"
+                  class="relative w-full"
+                  :class="{ 'min-h-64': !previewModel }"
+                >
                   <img
                     v-if="currentProtoImage"
                     ref="protoImageRef"
+                    :key="currentProtoImage"
                     :src="currentProtoImage"
-                    :alt="(currentModel?.deviceName || '设备') + ' 样机'"
-                    class="block max-w-full h-auto"
+                    :width="previewModel?.imageWidth"
+                    :height="previewModel?.imageHeight"
+                    :alt="(previewModel?.deviceName || '设备') + ' 样机'"
+                    class="block w-full h-auto"
                     @load="updateProtoSize"
                   />
+                  
 
-                  <div class="absolute inset-0" v-if="currentModel">
-                    <div
-                      class="absolute left-0 top-0 overflow-hidden relative"
-                      :style="{
+                  <div class="absolute inset-0" v-if="previewModel">
+                    <div class="absolute inset-0 overflow-hidden">
+                      <div
+                        class="absolute left-0 top-0 overflow-hidden"
+                        :style="{
                         width: scaledScreenSource.width + 'px',
                         height: scaledScreenSource.height + 'px',
                         borderRadius: scaledBorderRadius,
                         transform: warpMatrix,
                         transformOrigin: '0 0',
-                      }"
-                    >
+                        }"
+                      >
                       <div
                         v-if="screenshotUrl"
                         class="w-full h-full absolute inset-0 z-10"
                       >
                         <img
                           :src="screenshotUrl"
-                          :alt="currentModel.deviceName + ' 截图'"
+                          :alt="previewModel.deviceName + ' 截图'"
                           class="w-full h-full object-cover"
                         />
                       </div>
@@ -1163,13 +1782,14 @@ onBeforeUnmount(() => {
                         class="absolute inset-0 pointer-events-none z-20"
                         :style="{
                           borderRadius: scaledBorderRadius,
-                          background: currentModel.highlightGradient,
+                          background: previewModel.highlightGradient,
                         }"
                       ></div>
                     </div>
+                  </div>
 
                     <svg
-                      v-if="cornerEditMode && effectiveCorners.length === 4"
+                      v-if="cornerEditMode && showCornerGuide && effectiveCorners.length === 4"
                       class="absolute inset-0 w-full h-full"
                     >
                       <polygon
@@ -1186,29 +1806,99 @@ onBeforeUnmount(() => {
                       v-for="(corner, index) in editableCorners"
                       :key="index"
                       type="button"
-                      class="absolute w-4 h-4 rounded-full bg-blue-500 border-2 border-white shadow -translate-x-1/2 -translate-y-1/2 cursor-move"
+                      :aria-label="`${cornerLabels[index]} 角点`"
+                      :disabled="debugUnavailable"
+                      class="absolute flex h-11 w-11 -translate-x-1/2 -translate-y-1/2 touch-none select-none items-center justify-center border-0 bg-transparent p-0 cursor-move"
                       :style="{
                         left: corner.x + 'px',
                         top: corner.y + 'px',
                       }"
                       @pointerdown="(e) => handleCornerPointerDown(index, e)"
-                    ></button>
+                      @lostpointercapture="handlePointerUp"
+                    >
+                      <span
+                        class="pointer-events-none h-4 w-4 rounded-full border-2 border-white bg-blue-500 shadow"
+                      ></span>
+                    </button>
+                  </div>
+                  <div
+                    v-if="previewLoading || previewLoadError"
+                    class="absolute inset-0 z-30 flex flex-col items-center justify-center gap-3 bg-white"
+                  >
+                    <button
+                      type="button"
+                      class="border-0 bg-transparent p-0 enabled:cursor-pointer"
+                      :disabled="!previewLoadError"
+                      aria-label="重新加载当前模板"
+                      @click="loadPreviewModel(currentModel)"
+                    >
+                      <ImageLoading
+                        :key="currentModel?.imagePath"
+                        :progress="previewProgress"
+                        :error="!!previewLoadError"
+                      />
+                    </button>
                   </div>
                 </div>
 
-                <div class="mt-4 text-center" v-if="currentModel">
+                <div class="mt-4 text-center" v-if="previewModel">
                   <p class="text-sm text-gray-600">
-                    源截图 {{ currentModel.screenSource.width }} ×
-                    {{ currentModel.screenSource.height }} 像素
+                    源截图 {{ previewModel.screenSource.width }} ×
+                    {{ previewModel.screenSource.height }} 像素
                   </p>
                 </div>
               </CardContent>
             </Card>
           </div>
-
-          <ScrollBar orientation="horizontal" />
-        </ScrollArea>
       </div>
     </div>
   </div>
 </template>
+<style scoped>
+:deep(.number-stepper-input::-webkit-inner-spin-button) {
+  opacity: 1;
+}
+
+.number-stepper-button {
+  display: none;
+}
+
+@media (pointer: coarse) {
+  :deep(.number-stepper-input) {
+    appearance: textfield;
+    padding-inline: 24%;
+    text-align: center;
+    font-size: 0.75rem;
+  }
+
+  :deep(.number-stepper-input::-webkit-inner-spin-button),
+  :deep(.number-stepper-input::-webkit-outer-spin-button) {
+    -webkit-appearance: none;
+    margin: 0;
+  }
+
+  .number-stepper-button {
+    position: absolute;
+    top: 1px;
+    bottom: 1px;
+    display: flex;
+    width: 22%;
+    max-width: 1.75rem;
+    align-items: center;
+    justify-content: center;
+    border: 0;
+    border-radius: 0.25rem;
+    background: transparent;
+    padding: 0;
+    font-size: 0.875rem;
+    touch-action: none;
+    user-select: none;
+    -webkit-touch-callout: none;
+  }
+
+  .number-stepper-minus { left: 2px; }
+  .number-stepper-plus { right: 2px; }
+  .number-stepper-button:active { background: rgb(0 0 0 / 5%); }
+  .number-stepper-button:disabled { opacity: 0.35; }
+}
+</style>
