@@ -20,6 +20,9 @@ import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
 import { getPerspectiveTransform, type Point } from "@/lib/perspective";
 import ImageLoading from "@/components/ImageLoading.vue";
+import logoSvg from "../public/logo.svg?raw";
+
+const logoSrc = `data:image/svg+xml;charset=utf-8,${encodeURIComponent(logoSvg)}`;
 
 const imageRequests = new Set<AbortController>();
 const imageUrls = new Set<string>();
@@ -916,7 +919,8 @@ const loadTemplateImage = async (template: ProtoTemplate) => {
 };
 
 watch(currentTemplates, templates => {
-  templates.forEach(loadTemplateImage);
+  // 保留其他设备的下载与进度，切回时复用同一个请求。
+  templates.forEach(template => void loadTemplateImage(template));
 }, { immediate: true });
 
 const getTemplateMaskStyle = (template: ProtoTemplate) => {
@@ -1363,7 +1367,7 @@ onBeforeUnmount(() => {
     <div class="p-4">
       <div class="mb-6 flex items-center justify-between gap-3">
         <div class="flex items-center gap-2">
-          <img src="/logo.svg" alt="logo" class="h-8 w-8" />
+          <img :src="logoSrc" alt="logo" class="h-8 w-8" />
           <h1 class="text-2xl font-bold">米环样机生成器</h1>
         </div>
         <a
@@ -1699,7 +1703,7 @@ onBeforeUnmount(() => {
               </div>
               </fieldset>
 
-              <div v-if="screenshotUrl" class="space-y-2">
+              <div v-if="screenshotUrl" class="space-y-2 pt-6">
                 <Button
                   @click="exportImage"
                   class="w-full"
@@ -1770,7 +1774,7 @@ onBeforeUnmount(() => {
                       >
                         <div class="text-center text-gray-400">
                           <img
-                            src="/logo.svg"
+                            :src="logoSrc"
                             alt="logo"
                             class="w-8 h-8 mx-auto mb-1"
                           />
