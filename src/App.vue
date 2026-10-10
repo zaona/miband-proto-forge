@@ -319,6 +319,68 @@ const deviceModels: Record<string, DeviceModel> = {
           },
         ],
       },
+      {
+        id: "11-2",
+        name: "模板二",
+        imagePath: "/proto/11-2.png",
+        watchFaceType: "跑道形",
+        borderRadius: 106,
+        highlightGradient:
+          "linear-gradient(300deg, rgba(255,255,255,0.05) 0%, rgba(255,255,255,0.1) 50%, rgba(255,255,255,0.4) 100%)",
+        screenSource: {
+          width: 212,
+          height: 520,
+        },
+        screenCorners: [
+          {
+            x: 357,
+            y: 460,
+          },
+          {
+            x: 376,
+            y: 25,
+          },
+          {
+            x: 1657,
+            y: 25,
+          },
+          {
+            x: 1676,
+            y: 460,
+          },
+        ],
+      },
+      {
+        id: "11-3",
+        name: "模板三",
+        imagePath: "/proto/11-3.png",
+        watchFaceType: "跑道形",
+        borderRadius: 106,
+        highlightGradient:
+          "linear-gradient(300deg, rgba(255,255,255,0.05) 0%, rgba(255,255,255,0.1) 50%, rgba(255,255,255,0.4) 100%)",
+        screenSource: {
+          width: 212,
+          height: 520,
+        },
+        screenCorners: [
+          {
+            x: 328,
+            y: 71,
+          },
+          {
+            x: 352,
+            y: 0,
+          },
+          {
+            x: 1438,
+            y: 0,
+          },
+          {
+            x: 1462,
+            y: 71,
+          },
+        ],
+      },
     ],
   },
   "xiaomi-band-9p": {
