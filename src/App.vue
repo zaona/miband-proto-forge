@@ -20,6 +20,9 @@ import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
 import { getPerspectiveTransform, type Point } from "@/lib/perspective";
 import ImageLoading from "@/components/ImageLoading.vue";
+import roundScreenIcon from "@/assets/screen-types/xiaomi-watch.svg?inline";
+import squareScreenIcon from "@/assets/screen-types/xiaomi-band-pro.svg?inline";
+import racetrackScreenIcon from "@/assets/screen-types/xiaomi-band.svg?inline";
 import logoSvg from "../public/logo.svg?raw";
 
 const logoSrc = `data:image/svg+xml;charset=utf-8,${encodeURIComponent(logoSvg)}`;
@@ -86,6 +89,11 @@ const loadImage = async (
 };
 
 const screenTypes = ["圆形", "方形", "跑道形"] as const;
+const screenTypeIcons = {
+  圆形: roundScreenIcon,
+  方形: squareScreenIcon,
+  跑道形: racetrackScreenIcon,
+};
 const selectedScreenType = ref<ProtoTemplate["watchFaceType"]>("圆形");
 const selectedModel = ref("");
 const selectedTemplate = ref("");
@@ -1464,11 +1472,27 @@ onBeforeUnmount(() => {
                 <label class="text-sm font-medium">屏幕类型</label>
                 <Select v-model="selectedScreenType">
                   <SelectTrigger>
-                    <SelectValue placeholder="选择屏幕类型" />
+                    <SelectValue placeholder="选择屏幕类型">
+                      <img
+                        :src="screenTypeIcons[selectedScreenType]"
+                        alt=""
+                        aria-hidden="true"
+                        class="size-[1em] shrink-0"
+                      />
+                      <span>{{ selectedScreenType === "跑道形" ? "跑道型" : selectedScreenType }}</span>
+                    </SelectValue>
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem v-for="type in screenTypes" :key="type" :value="type">
-                      {{ type === "跑道形" ? "跑道型" : type }}
+                      <span class="flex items-center gap-2">
+                        <img
+                          :src="screenTypeIcons[type]"
+                          alt=""
+                          aria-hidden="true"
+                          class="size-[1em] shrink-0"
+                        />
+                        <span>{{ type === "跑道形" ? "跑道型" : type }}</span>
+                      </span>
                     </SelectItem>
                   </SelectContent>
                 </Select>
@@ -1873,7 +1897,8 @@ onBeforeUnmount(() => {
                       type="button"
                       :aria-label="`${cornerLabels[index]} 角点`"
                       :disabled="debugUnavailable"
-                      class="absolute flex h-11 w-11 -translate-x-1/2 -translate-y-1/2 touch-none select-none items-center justify-center border-0 bg-transparent p-0 cursor-move"
+                      class="corner-handle absolute flex h-11 w-11 -translate-x-1/2 -translate-y-1/2 touch-none select-none items-center justify-center border-0 bg-transparent p-0 cursor-move"
+                      :class="{ 'corner-handle-dragging': draggingCornerIndex === index }"
                       :style="{
                         left: corner.x + 'px',
                         top: corner.y + 'px',
@@ -1882,7 +1907,7 @@ onBeforeUnmount(() => {
                       @lostpointercapture="handlePointerUp"
                     >
                       <span
-                        class="pointer-events-none h-4 w-4 rounded-full border-2 border-white bg-blue-500 shadow"
+                        class="corner-handle-dot pointer-events-none h-4 w-4 rounded-full border-2 border-white bg-blue-500 shadow"
                       ></span>
                     </button>
                   </div>
@@ -1920,6 +1945,21 @@ onBeforeUnmount(() => {
   </div>
 </template>
 <style scoped>
+.corner-handle-dot {
+  transform: scale(1);
+  transition: transform 200ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.corner-handle-dragging .corner-handle-dot {
+  transform: scale(1.25);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .corner-handle:not(:disabled):hover .corner-handle-dot {
+    transform: scale(1.25);
+  }
+}
+
 :deep(.number-stepper-input::-webkit-inner-spin-button) {
   opacity: 1;
 }
