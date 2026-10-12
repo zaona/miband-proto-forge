@@ -1209,8 +1209,7 @@ const startNumberStep = (direction: -1 | 1, event: PointerEvent) => {
   const button = event.currentTarget as HTMLButtonElement;
   const input = button.parentElement?.querySelector("input");
   if (!input || input.matches(":disabled") || input.readOnly) return;
-  input.focus({ preventScroll: true });
-  input.select();
+  // 微调不聚焦输入框，避免触屏操作唤起软键盘。
   numberStepPress = { button, input, pointerId: event.pointerId, initialValue: input.value };
   button.setPointerCapture(event.pointerId);
   const step = () => {
@@ -1717,7 +1716,7 @@ onBeforeUnmount(() => {
                         {{ cornerLabels[index] }}
                       </div>
 
-                      <div class="grid grid-cols-2 gap-2">
+                      <div class="corner-coordinate-grid grid grid-cols-2 gap-2">
                         <div
                           v-for="axis in cornerAxes"
                           :key="axis"
@@ -1930,9 +1929,13 @@ onBeforeUnmount(() => {
 }
 
 @media (pointer: coarse) {
+  .corner-coordinate-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
   :deep(.number-stepper-input) {
     appearance: textfield;
-    padding-inline: 24%;
+    padding-inline: 32%;
     text-align: center;
     font-size: 0.75rem;
   }
@@ -1948,8 +1951,8 @@ onBeforeUnmount(() => {
     top: 1px;
     bottom: 1px;
     display: flex;
-    width: 22%;
-    max-width: 1.75rem;
+    width: 30%;
+    max-width: 2.5rem;
     align-items: center;
     justify-content: center;
     border: 0;
